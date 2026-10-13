@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui">
+  <ribbon>
+    <tabs>
+      <tab id="tabMacPowerPointBatchColorBeta" label="Mac 批量改色·测试版">
+        <group id="grpMacPowerPointBatchColor" label="Mac PowerPoint 批量改色">
+          <button id="btnMacBatchColorPanel" label="打开选色面板"
+                  screentip="0.1.0-beta.1 测试版：选择页面、预览颜色、批量替换"
+                  onAction="ShowColorPanel"/>
+          <button id="btnMacBatchColorUndo" label="撤销上次改色"
+                  screentip="回退插件最近一次改色，包括可访问的图表颜色"
+                  onAction="UndoLastColorChange"/>
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

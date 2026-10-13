@@ -1,0 +1,385 @@
+[
+  {
+    "type": "Label",
+    "name": "LeftCard"
+  },
+  {
+    "type": "Label",
+    "name": "RightCard"
+  },
+  {
+    "type": "Label",
+    "name": "PickFill"
+  },
+  {
+    "type": "Label",
+    "name": "PickLine"
+  },
+  {
+    "type": "Label",
+    "name": "PickText"
+  },
+  {
+    "type": "Label",
+    "name": "RadiusHint"
+  },
+  {
+    "type": "Label",
+    "name": "CandidatesHint"
+  },
+  {
+    "type": "Label",
+    "name": "TargetTitle"
+  },
+  {
+    "type": "Label",
+    "name": "TargetHint"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeHint"
+  },
+  {
+    "type": "Label",
+    "name": "ScopeTitle"
+  },
+  {
+    "type": "Label",
+    "name": "ScopeAll"
+  },
+  {
+    "type": "Label",
+    "name": "ScopeSelected"
+  },
+  {
+    "type": "Label",
+    "name": "ScopeCustom"
+  },
+  {
+    "type": "Label",
+    "name": "RangeHint"
+  },
+  {
+    "type": "TextBox",
+    "name": "HexBox"
+  },
+  {
+    "type": "TextBox",
+    "name": "GreenBox"
+  },
+  {
+    "type": "TextBox",
+    "name": "RedBox"
+  },
+  {
+    "type": "TextBox",
+    "name": "BlueBox"
+  },
+  {
+    "type": "TextBox",
+    "name": "LongBox"
+  },
+  {
+    "type": "TextBox",
+    "name": "RangeBox"
+  },
+  {
+    "type": "Label",
+    "name": "ColorLabel"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor11"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor12"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor1"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor1"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor2"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor3"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor4"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor5"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor6"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor7"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor8"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor9"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor10"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor2"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor3"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor4"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor5"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor6"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor7"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor8"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor9"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor10"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor11"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor12"
+  },
+  {
+    "type": "ScrollBar",
+    "name": "BlueBar"
+  },
+  {
+    "type": "CommandButton",
+    "name": "CommandButtonEsc",
+    "caption": "扫描相近色"
+  },
+  {
+    "type": "CommandButton",
+    "name": "OKButton",
+    "caption": "替换选定范围"
+  },
+  {
+    "type": "CommandButton",
+    "name": "CancelButton",
+    "caption": "取消"
+  },
+  {
+    "type": "Label",
+    "name": "PickFillText"
+  },
+  {
+    "type": "Label",
+    "name": "PickLineText"
+  },
+  {
+    "type": "Label",
+    "name": "PickTextText"
+  },
+  {
+    "type": "Label",
+    "name": "RadiusHintText"
+  },
+  {
+    "type": "Label",
+    "name": "CandidatesHintText"
+  },
+  {
+    "type": "Label",
+    "name": "TargetTitleText"
+  },
+  {
+    "type": "Label",
+    "name": "TargetHintText"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeHintText"
+  },
+  {
+    "type": "Label",
+    "name": "ScopeTitleText"
+  },
+  {
+    "type": "Label",
+    "name": "ScopeAllText"
+  },
+  {
+    "type": "Label",
+    "name": "ScopeSelectedText"
+  },
+  {
+    "type": "Label",
+    "name": "ScopeCustomText"
+  },
+  {
+    "type": "Label",
+    "name": "RangeHintText"
+  },
+  {
+    "type": "Label",
+    "name": "ColorLabelText"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor11Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor12Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor1Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor1Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor2Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor3Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor4Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor5Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor6Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor7Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor8Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor9Text"
+  },
+  {
+    "type": "Label",
+    "name": "ThemeColor10Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor2Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor3Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor4Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor5Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor6Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor7Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor8Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor9Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor10Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor11Text"
+  },
+  {
+    "type": "Label",
+    "name": "StandardColor12Text"
+  },
+  {
+    "type": "Label",
+    "name": "HexBoxFrame"
+  },
+  {
+    "type": "Label",
+    "name": "RedBoxFrame"
+  },
+  {
+    "type": "Label",
+    "name": "LongBoxFrame"
+  },
+  {
+    "type": "Label",
+    "name": "RangeBoxFrame"
+  },
+  {
+    "type": "Label",
+    "name": "CommandButtonEscText"
+  },
+  {
+    "type": "Label",
+    "name": "OKButtonText"
+  },
+  {
+    "type": "Label",
+    "name": "CancelButtonText"
+  }
+]

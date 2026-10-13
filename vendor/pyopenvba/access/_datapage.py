@@ -1,0 +1,204 @@
+"""In-place editing of a data-shaped page: the slot table and the rows.
+
+Measured on pages the ACE engine wrote (docs/access_engine.md):
+
+* Rows are laid down from the end of the page toward the slot table, in
+  slot order, with no gaps: row k occupies [offset(k), offset(k-1)).
+* Free space (u16 at 2) is exactly 4096 - 14 - 2 * slots - bytes below
+  the lowest row.
+* Deleting a row shifts every row below it up over the hole, updates
+  their offsets, and leaves the slot in place flagged 0xC000 with its
+  offset at the boundary it now sits on (zero length).  The bytes freed
+  at the bottom are not cleared.
+* Replacing a row shifts the rows below it by the size difference.
+* Inserting appends a slot and places the row below the lowest one.
+"""
+
+from __future__ import annotations
+
+import struct
+
+from pyopenvba.access_read import AccessError
+from pyopenvba.access._pages import (
+    PAGE_RETIRED,
+    OFFSET_PAGE_FREE_SPACE,
+    OFFSET_PAGE_OWNER,
+    OFFSET_PAGE_ROW_COUNT,
+    OFFSET_PAGE_ROW_TABLE,
+    PAGE_DATA,
+    PAGE_SIZE,
+    ROW_DELETED,
+    ROW_OFFSET_MASK,
+    ROW_OVERFLOW,
+)
+
+INITIAL_FREE_SPACE = PAGE_SIZE - OFFSET_PAGE_ROW_TABLE
+DEAD_SLOT = ROW_DELETED | ROW_OVERFLOW
+
+
+class DataPage:
+    """A 4 KiB data page held as a mutable byte array."""
+
+    def __init__(self, raw: bytes) -> None:
+        if len(raw) != PAGE_SIZE:
+            raise AccessError(f"a page is {PAGE_SIZE} bytes, got {len(raw)}")
+        if raw[0] != PAGE_DATA:
+            raise AccessError(f"page type {raw[0]:#04x} is not a data page")
+        self.raw = bytearray(raw)
+
+    @classmethod
+    def new(cls, owner: int) -> DataPage:
+        raw = bytearray(PAGE_SIZE)
+        raw[0] = PAGE_DATA
+        raw[1] = 0x01
+        struct.pack_into("<H", raw, OFFSET_PAGE_FREE_SPACE, INITIAL_FREE_SPACE)
+        struct.pack_into("<I", raw, OFFSET_PAGE_OWNER, owner)
+        return cls(bytes(raw))
+
+    # -- reading -----------------------------------------------------------
+
+    @property
+    def owner(self) -> int:
+        return struct.unpack_from("<I", self.raw, OFFSET_PAGE_OWNER)[0]
+
+    @property
+    def free_space(self) -> int:
+        return struct.unpack_from("<H", self.raw, OFFSET_PAGE_FREE_SPACE)[0]
+
+    @property
+    def slot_count(self) -> int:
+        return struct.unpack_from("<H", self.raw, OFFSET_PAGE_ROW_COUNT)[0]
+
+    @property
+    def slots(self) -> list[int]:
+        count = self.slot_count
+        return list(struct.unpack_from(f"<{count}H", self.raw, OFFSET_PAGE_ROW_TABLE))
+
+    def span(self, slot: int) -> tuple[int, int]:
+        slots = self.slots
+        start = slots[slot] & ROW_OFFSET_MASK
+        end = PAGE_SIZE if slot == 0 else slots[slot - 1] & ROW_OFFSET_MASK
+        return start, end
+
+    def lowest_offset(self) -> int:
+        slots = self.slots
+        if not slots:
+            return PAGE_SIZE
+        return min(entry & ROW_OFFSET_MASK for entry in slots)
+
+    def fits(self, row_length: int) -> bool:
+        return self.free_space >= row_length + 2
+
+    def row(self, slot: int) -> bytes | None:
+        entry = self.slots[slot]
+        if entry & ROW_DELETED:
+            return None
+        start, end = self.span(slot)
+        if entry & ROW_OVERFLOW:
+            return bytes(self.raw[start : start + 4])
+        return bytes(self.raw[start:end])
+
+    # -- writing -----------------------------------------------------------
+
+    def _set_slot(self, slot: int, value: int) -> None:
+        struct.pack_into("<H", self.raw, OFFSET_PAGE_ROW_TABLE + 2 * slot, value)
+
+    def _set_free_space(self, value: int) -> None:
+        if not 0 <= value <= INITIAL_FREE_SPACE:
+            raise AccessError(f"free space {value} is impossible")
+        struct.pack_into("<H", self.raw, OFFSET_PAGE_FREE_SPACE, value)
+
+    def add_row(self, row: bytes, flags: int = 0) -> int:
+        """Append a slot for ``row`` and return the slot number.  ``flags``
+        is 0x8000 for a row moved here from another page."""
+        if not self.fits(len(row)):
+            raise AccessError(
+                f"row of {len(row)} bytes does not fit; {self.free_space} bytes free"
+            )
+        slot = self.slot_count
+        start = self.lowest_offset() - len(row)
+        if start < OFFSET_PAGE_ROW_TABLE + 2 * (slot + 1):
+            raise AccessError("row would overlap the slot table")
+        self.raw[start : start + len(row)] = row
+        struct.pack_into("<H", self.raw, OFFSET_PAGE_ROW_COUNT, slot + 1)
+        self._set_slot(slot, flags | start)
+        self._set_free_space(self.free_space - len(row) - 2)
+        return slot
+
+    def set_flags(self, slot: int, flags: int) -> None:
+        """Replace the flag bits of a slot, keeping its offset."""
+        entry = self.slots[slot]
+        self._set_slot(slot, flags | (entry & ROW_OFFSET_MASK))
+
+    def _shift_below(self, boundary: int, delta: int) -> None:
+        """Move every row that starts below ``boundary`` by ``delta`` bytes
+        (positive moves toward the page end) and fix its slot offset."""
+        lowest = self.lowest_offset()
+        if lowest < boundary:
+            block = bytes(self.raw[lowest:boundary])
+            self.raw[lowest + delta : boundary + delta] = block
+        for slot, entry in enumerate(self.slots):
+            offset = entry & ROW_OFFSET_MASK
+            # A dead slot is a zero-length row; one sitting exactly at the
+            # boundary belongs to the block below and moves with it, even
+            # when that block is empty (measured: six rows deleted through
+            # an index all ended up recording the same boundary, and dead
+            # slots parked at the lowest row's start follow the data start
+            # when that row goes too).
+            dead_at_boundary = (entry & DEAD_SLOT) == DEAD_SLOT and offset == boundary
+            if offset < boundary or dead_at_boundary:
+                self._set_slot(slot, (entry & ~ROW_OFFSET_MASK) | (offset + delta))
+
+    @property
+    def live_rows(self) -> int:
+        """Slots that still hold a row (a moved row counts; a dead slot does not)."""
+        return sum(1 for entry in self.slots if (entry & DEAD_SLOT) != DEAD_SLOT)
+
+    def retire(self) -> None:
+        """What the engine does to a page whose last row went: type 0x09,
+        every slot dead at the page end (0xD000), the free word counting
+        only the header and slot table, rows and owner left in place."""
+        self.raw[0] = PAGE_RETIRED
+        for slot in range(self.slot_count):
+            self._set_slot(slot, DEAD_SLOT | PAGE_SIZE)
+        self._set_free_space(INITIAL_FREE_SPACE - 2 * self.slot_count)
+
+    def remove_row(self, slot: int, *, overflow_target: bool = False) -> None:
+        """Delete a row the way the engine does: close the hole and leave a
+        dead slot at the boundary.  Works for a plain row, an overflow
+        pointer, and -- with ``overflow_target`` -- the moved row a pointer
+        refers to, whose 0x8000 flag is not a deletion."""
+        entry = self.slots[slot]
+        if entry & ROW_DELETED and not overflow_target:
+            raise AccessError(f"slot {slot} is already dead")
+        if overflow_target and (entry & DEAD_SLOT) != ROW_DELETED:
+            raise AccessError(f"slot {slot} is not a moved row")
+        start, end = self.span(slot)
+        length = end - start
+        self._shift_below(start, length)
+        self._set_slot(slot, DEAD_SLOT | end)
+        self._set_free_space(self.free_space + length)
+
+    def replace_row(self, slot: int, row: bytes, *, flags: int | None = None) -> None:
+        """Overwrite a slot's row (a plain row, a pointer, or a moved row),
+        shifting the rows below by the size change.  ``flags`` replaces
+        the slot's flag bits when given."""
+        entry = self.slots[slot]
+        if (entry & DEAD_SLOT) == DEAD_SLOT:
+            raise AccessError(f"slot {slot} is dead")
+        start, end = self.span(slot)
+        delta = len(row) - (end - start)
+        if delta > self.free_space:
+            raise AccessError(
+                f"row grows by {delta} bytes but only {self.free_space} are free"
+            )
+        if delta:
+            self._shift_below(start, -delta)
+            start -= delta
+        new_flags = (entry & ~ROW_OFFSET_MASK) if flags is None else flags
+        self._set_slot(slot, new_flags | start)
+        self.raw[start : start + len(row)] = row
+        self._set_free_space(self.free_space - delta)
+
+    def to_bytes(self) -> bytes:
+        return bytes(self.raw)

@@ -1,0 +1,19 @@
+{
+  "status": "pass_with_documented_limits",
+  "selected_page_changes": 6,
+  "selected_page_undo_restored": 6,
+  "all_pages_changes": 37,
+  "formatted_clipboard": "华文琥珀 112233 -> plain 112233",
+  "invalid_input": "12G blocked; panel remains usable",
+  "reopen_without_save": "passed",
+  "temporary_addins_removed": true,
+  "original_v7_reenabled": true,
+  "macro_protection_restored": "user confirmed",
+  "not_verified": [
+    "physical Command shortcuts",
+    "partial text selection",
+    "text undo redo",
+    "cold start beta with macro protection restored",
+    "other Office/macOS combinations"
+  ]
+}

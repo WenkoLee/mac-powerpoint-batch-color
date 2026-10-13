@@ -1,0 +1,13 @@
+{
+  "project": "Mac PowerPoint Batch Color Replacer",
+  "version": "0.1.0-beta.1",
+  "status": "beta",
+  "package": "MacPowerPointBatchColor_0_1_0_beta_1.ppam",
+  "sha256": "266e692a466fc9cd9d0e69ae04dc2e8bab69beb8d76b53caaa263afe66e15e51",
+  "source_sha256": {
+    "src/ColorPickerForm.bas": "92ab9671264ecde877f6fdfb76b26f9ceb1bd8c20338e643131e8fab2a5b1600",
+    "src/ColorReplaceInPlace.bas": "262d6c188a6a8374de4461f2ab7f7c22790fbb7dcc6435d57079abd2dfc3ca06",
+    "src/form-controls.json": "6f525b4250b82640f464b56e8ef475eaccad6a843fa7531d6eae1809d06dca89",
+    "src/ribbon.xml": "fc3eed5f7548f662ac83429ce54a37fa451c2f839afb16f0cbd512ae4fcaff4c"
+  }
+}

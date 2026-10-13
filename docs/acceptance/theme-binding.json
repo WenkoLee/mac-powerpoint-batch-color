@@ -1,0 +1,6 @@
+{
+  "check": "saved chart series fill and line use schemeClr dk2; unrelated point remains AA33CC",
+  "source_sha256": "9d1dfb02048887c34503cd8ad83f25c1208843ca98f0792f7ab2e3b52bebb9bc",
+  "passed": true,
+  "note": "Mac ObjectThemeColor getter returned 0; saved OOXML retains dk2."
+}

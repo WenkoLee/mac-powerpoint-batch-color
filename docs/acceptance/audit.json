@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "public_file_count": 263,
+  "dependency_version": "6.1.2",
+  "issues": [],
+  "presentations": [
+    "examples/BatchColorDemo.pptx",
+    "release/MacPowerPointBatchColor_0_1_0_beta_1.ppam",
+    "templates/powerpoint-base.pptm",
+    "templates/qa-fixture.pptx",
+    "vendor/pyopenvba/_templates/blank_files/blank_presentation.pptm"
+  ]
+}

@@ -1,0 +1,371 @@
+"""
+Command-line entry point.
+
+Usage::
+
+    python -m pyopenvba pull <office_file> <dest_dir>
+    python -m pyopenvba push <src_dir> <office_file> [--out <new_path>] [--strict]
+    python -m pyopenvba ls   <office_file>
+    python -m pyopenvba forms <office_file> [--mask]
+    python -m pyopenvba access-ls    <accdb>
+    python -m pyopenvba access-pull  <accdb> <dest_dir>
+    python -m pyopenvba access-push  <src_dir> <accdb> [--out <new_path>] [--strict]
+    python -m pyopenvba access-disasm <accdb> [--module <name>] [--with-source]
+    python -m pyopenvba disasm <office_file> [--module <name>] [--with-source]
+    python -m pyopenvba pq-ls   <workbook>
+    python -m pyopenvba pq-pull <workbook> <dest_dir>
+    python -m pyopenvba pq-push <src_dir> <workbook> [--out <new_path>] [--remove-missing]
+
+``<office_file>`` may be any supported Excel, Word, or PowerPoint file;
+the host is selected by extension (see ``_HOST_BY_SUFFIX``).
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+from pyopenvba import ExcelFile, PowerPointFile, PowerQueryWorkbook, WordFile
+from pyopenvba.powerquery import pull_queries, push_queries
+
+
+def _resolve_host(path: Path) -> type | None:
+    """Return the host file class for ``path`` by extension, or ``None``
+    (after printing an error) when the extension is unsupported."""
+    host_cls = _HOST_BY_SUFFIX.get(path.suffix.lower())
+    if host_cls is None:
+        print(
+            f"error: unsupported file type {path.suffix.lower()!r}; expected one of "
+            f"{sorted(_HOST_BY_SUFFIX)}",
+            file=sys.stderr,
+        )
+    return host_cls
+
+
+def _cmd_pull(args: argparse.Namespace) -> int:
+    host_cls = _resolve_host(args.workbook)
+    if host_cls is None:
+        return 2
+    with host_cls(args.workbook) as host:
+        written = host.pull_modules(args.dest, overwrite=not args.no_overwrite)
+    for p in written:
+        print(p)
+    return 0
+
+
+def _cmd_push(args: argparse.Namespace) -> int:
+    host_cls = _resolve_host(args.workbook)
+    if host_cls is None:
+        return 2
+    with host_cls(args.workbook) as host:
+        updated = host.push_modules(args.src, strict=args.strict)
+        host.save(args.out)
+    for name in updated:
+        print(name)
+    return 0
+
+
+def _cmd_ls(args: argparse.Namespace) -> int:
+    host_cls = _resolve_host(args.workbook)
+    if host_cls is None:
+        return 2
+    with host_cls(args.workbook) as host:
+        for m in host.vba_project().modules:
+            print(f"{m.kind.name:8s}  {m.name}")
+    return 0
+
+
+def _cmd_forms(args: argparse.Namespace) -> int:
+    """Print a form's control tree: a manifest diffable without Office."""
+    from pyopenvba.forms import FormControl
+
+    host_cls = _resolve_host(args.workbook)
+    if host_cls is None:
+        return 2
+
+    def show(control: FormControl, depth: int) -> None:
+        pad = "  " * depth
+        head = f"{pad}{control.name or '(unnamed)':<20} {control.kind:<22}"
+        if args.mask:
+            width = control.property_mask_width * 2
+            print(
+                f"{head} id={control.id:<4} "
+                f"set={control.properties_set:#0{2 + width}x}"
+            )
+        else:
+            print(f"{head} id={control.id}")
+            for name, value in control.properties().items():
+                print(f"{pad}    {name} = {value!r}")
+        for child in control.children:
+            show(child, depth + 1)
+
+    with host_cls(args.workbook) as host:
+        forms = host.forms()
+        if not forms:
+            print("no UserForms in this project")
+            return 0
+        for form in forms:
+            print(f"{form.name}  ({len(form.walk())} controls)")
+            if not args.mask:
+                for name, value in form.properties().items():
+                    print(f"    {name} = {value!r}")
+            for control in form.controls:
+                show(control, 1)
+    return 0
+
+
+def _cmd_access_ls(args: argparse.Namespace) -> int:
+    from pyopenvba.access_read import AccessReader
+
+    db = AccessReader(args.database)
+    for m in db.iter_vba_modules():
+        print(m.name)
+    return 0
+
+
+def _cmd_access_pull(args: argparse.Namespace) -> int:
+    from pyopenvba.access_read import AccessReader
+
+    db = AccessReader(args.database)
+    # pull_modules classifies standard modules as .bas and class modules
+    # as .cls, matching the Excel/Word/PowerPoint pull commands.
+    for out in db.pull_modules(args.dest):
+        print(out)
+    return 0
+
+
+def _cmd_access_push(args: argparse.Namespace) -> int:
+    from pyopenvba.access import AccessDatabase
+
+    with AccessDatabase(args.database) as db:
+        updated = db.push_modules(args.src, strict=args.strict)
+        db.save(args.out)
+    for name in updated:
+        print(name)
+    return 0
+
+
+def _cmd_access_disasm(args: argparse.Namespace) -> int:
+    from pyopenvba.access_read import AccessReader
+
+    db = AccessReader(args.database)
+    sources: dict[str, str] = {}
+    if args.with_source:
+        sources = {m.name: m.source for m in db.iter_vba_modules()}
+    if args.module is not None:
+        mod = db.disassemble_module(args.module)
+        src = sources.get(args.module, "") if args.with_source else ""
+        listing = (
+            mod.to_annotated_listing(src)
+            if args.with_source
+            else mod.to_listing()
+        )
+        print(f"===== {args.module} =====")
+        print(listing)
+        return 0
+    for name, mod in db.disassemble_all_modules().items():
+        print(f"===== {name} =====")
+        if args.with_source:
+            print(mod.to_annotated_listing(sources.get(name, "")))
+        else:
+            print(mod.to_listing())
+    return 0
+
+
+# Every extension listed here is accepted by the mapped host class;
+# keep this in lockstep with each facade's _ZIP_FORMATS / _CFB_FORMATS.
+_HOST_BY_SUFFIX: dict[str, type] = {
+    ".xlsm": ExcelFile,
+    ".xlsb": ExcelFile,
+    ".xlam": ExcelFile,
+    ".xls": ExcelFile,
+    ".docm": WordFile,
+    ".dotm": WordFile,
+    ".doc": WordFile,
+    ".pptm": PowerPointFile,
+    ".potm": PowerPointFile,
+    ".ppt": PowerPointFile,
+}
+
+
+def _cmd_disasm(args: argparse.Namespace) -> int:
+    suffix = args.workbook.suffix.lower()
+    host_cls = _HOST_BY_SUFFIX.get(suffix)
+    if host_cls is None:
+        print(
+            f"error: unsupported file type {suffix!r}; expected one of "
+            f"{sorted(_HOST_BY_SUFFIX)}",
+            file=sys.stderr,
+        )
+        return 2
+    with host_cls(args.workbook) as host:
+        project = host.vba_project()
+        modules = list(project.modules)
+    if args.module is not None:
+        modules = [m for m in modules if m.name == args.module]
+        if not modules:
+            print(
+                f"error: module {args.module!r} not found",
+                file=sys.stderr,
+            )
+            return 1
+    for mod in modules:
+        disasm = mod.disassemble()
+        print(f"===== {mod.name} =====")
+        if args.with_source:
+            print(disasm.to_annotated_listing(mod.source))
+        else:
+            print(disasm.to_listing())
+    return 0
+
+
+def _cmd_pq_ls(args: argparse.Namespace) -> int:
+    book = PowerQueryWorkbook(args.workbook)
+    groups = {str(group.id): group.name for group in book.groups()}
+    for query in book.queries():
+        group = query.group
+        where = f"  [{groups.get(str(group.id), group.name)}]" if group else ""
+        steps = f"  {len(query.steps)} steps" if query.steps else ""
+        print(f"{query.name}	{query.load_target}{steps}{where}")
+    return 0
+
+
+def _cmd_pq_pull(args: argparse.Namespace) -> int:
+    for path in pull_queries(args.workbook, args.dest, overwrite=not args.no_overwrite):
+        print(path)
+    return 0
+
+
+def _cmd_pq_push(args: argparse.Namespace) -> int:
+    for name in push_queries(args.src, args.workbook, out=args.out, remove_missing=args.remove_missing):
+        print(name)
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="pyopenvba")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p_pull = sub.add_parser("pull", help="Export VBA modules to a directory.")
+    p_pull.add_argument("workbook", type=Path)
+    p_pull.add_argument("dest", type=Path)
+    p_pull.add_argument("--no-overwrite", action="store_true")
+    p_pull.set_defaults(func=_cmd_pull)
+
+    p_push = sub.add_parser("push", help="Import VBA modules from a directory and save.")
+    p_push.add_argument("src", type=Path)
+    p_push.add_argument("workbook", type=Path)
+    p_push.add_argument("--out", type=Path, default=None)
+    p_push.add_argument("--strict", action="store_true",
+                        help="Fail if any source file has no matching module.")
+    p_push.set_defaults(func=_cmd_push)
+
+    p_ls = sub.add_parser("ls", help="List VBA modules in a workbook.")
+    p_ls.add_argument("workbook", type=Path)
+    p_ls.set_defaults(func=_cmd_ls)
+
+    p_forms = sub.add_parser(
+        "forms",
+        help=(
+            "List each UserForm's control tree, with the properties the "
+            "developer actually set."
+        ),
+    )
+    p_forms.add_argument("workbook", type=Path)
+    p_forms.add_argument(
+        "--mask",
+        action="store_true",
+        help="Show each control's raw property mask instead of named values.",
+    )
+    p_forms.set_defaults(func=_cmd_forms)
+
+    p_als = sub.add_parser(
+        "access-ls",
+        help="List VBA modules in an Access database (.accdb/.mdb).",
+    )
+    p_als.add_argument("database", type=Path)
+    p_als.set_defaults(func=_cmd_access_ls)
+
+    p_apl = sub.add_parser(
+        "access-pull",
+        help="Export VBA modules from an Access database to a directory.",
+    )
+    p_apl.add_argument("database", type=Path)
+    p_apl.add_argument("dest", type=Path)
+    p_apl.set_defaults(func=_cmd_access_pull)
+
+    p_aps = sub.add_parser(
+        "access-push",
+        help="Import VBA modules from a directory into an Access database and save.",
+    )
+    p_aps.add_argument("src", type=Path)
+    p_aps.add_argument("database", type=Path)
+    p_aps.add_argument("--out", type=Path, default=None, help="Save to this path instead of in place.")
+    p_aps.add_argument("--strict", action="store_true", help="Fail on a file that matches no module.")
+    p_aps.set_defaults(func=_cmd_access_push)
+
+    p_ad = sub.add_parser(
+        "access-disasm",
+        help="Disassemble compiled VBA p-code from an Access database.",
+    )
+    p_ad.add_argument("database", type=Path)
+    p_ad.add_argument(
+        "--module",
+        default=None,
+        help="Disassemble just this module (default: every module).",
+    )
+    p_ad.add_argument(
+        "--with-source",
+        action="store_true",
+        help="Interleave original VBA source lines with the p-code.",
+    )
+    p_ad.set_defaults(func=_cmd_access_disasm)
+
+    p_d = sub.add_parser(
+        "disasm",
+        help=(
+            "Disassemble compiled VBA p-code from an Excel/Word/"
+            "PowerPoint host (.xlsm/.docm/.pptm/...)."
+        ),
+    )
+    p_d.add_argument("workbook", type=Path)
+    p_d.add_argument(
+        "--module",
+        default=None,
+        help="Disassemble just this module (default: every module).",
+    )
+    p_d.add_argument(
+        "--with-source",
+        action="store_true",
+        help="Interleave original VBA source lines with the p-code.",
+    )
+    p_d.set_defaults(func=_cmd_disasm)
+
+    p_pq_ls = sub.add_parser("pq-ls", help="List the Power Queries in a workbook.")
+    p_pq_ls.add_argument("workbook", type=Path)
+    p_pq_ls.set_defaults(func=_cmd_pq_ls)
+
+    p_pq_pull = sub.add_parser("pq-pull", help="Export Power Queries to a directory as .m files.")
+    p_pq_pull.add_argument("workbook", type=Path)
+    p_pq_pull.add_argument("dest", type=Path)
+    p_pq_pull.add_argument("--no-overwrite", action="store_true")
+    p_pq_pull.set_defaults(func=_cmd_pq_pull)
+
+    p_pq_push = sub.add_parser("pq-push", help="Import Power Queries from a directory of .m files and save.")
+    p_pq_push.add_argument("src", type=Path)
+    p_pq_push.add_argument("workbook", type=Path)
+    p_pq_push.add_argument("--out", type=Path, default=None)
+    p_pq_push.add_argument(
+        "--remove-missing",
+        action="store_true",
+        help="Also delete queries the directory does not hold.",
+    )
+    p_pq_push.set_defaults(func=_cmd_pq_push)
+
+    args = parser.parse_args(argv)
+    return int(args.func(args))
+
+
+if __name__ == "__main__":   # pragma: no cover
+    sys.exit(main())
