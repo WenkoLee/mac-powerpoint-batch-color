@@ -4,14 +4,14 @@
 
 专为 Mac 桌面版 PowerPoint 制作的中文批量改色加载项。在当前打开的演示文稿中，把固定 RGB 颜色或主题色替换为另一种颜色或主题色。
 
-**当前版本：0.1.1**  
+**当前版本：0.1.2**  
 **开源许可证：MIT**  
 **发布渠道：GitHub 发布 · 请先使用自制示例试用。**
 
 ## 下载插件
 
-- **[下载 Mac 安装包](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/download/v0.1.1/OneClickColor_MacPowerPoint_0_1_1_Mac.zip)**：普通用户推荐，包含插件、中文说明和自制示例。
-- [发布页](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/tag/v0.1.1)：独立 PPAM、完整源码包与 SHA256 校验文件。
+- **[下载 Mac 安装包](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/download/v0.1.2/OneClickColor_MacPowerPoint_0_1_2_Mac.zip)**：普通用户推荐，包含插件、中文说明和自制示例。
+- [发布页](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/tag/v0.1.2)：独立 PPAM、完整源码包与 SHA256 校验文件。
 - [安装说明](docs/INSTALL.md) · [用户指南](docs/USER_GUIDE.md) · [验收记录](docs/acceptance/ACCEPTANCE.md)
 
 ## 为什么开发这个插件
@@ -28,7 +28,7 @@
 - 输入六位 HEX 色号或选择主题旧色，也可以从页面上的已选对象读取填充、线条或文字颜色。
 - 通过“选择旧色 / 选择目标色”切换色板用途；支持主题色互换。
 - 打开面板后继续选择其他对象或页面，面板同步相关信息。
-- 默认处理当前页；选择缩略图中的多页时自动同步，也可处理所有页或指定页码。
+- 打开面板默认处理所有页；也可切换“已选页”处理当前页或所选多页，或指定页码。
 - 无需扫描即可精确替换；需要扩大范围时再扫描相近颜色、核对并勾选候选。
 - 将 RGB 或主题旧色换成新的 HEX 或主题色；主题色互换保留原有明暗变化。
 - 遍历可访问的形状、文字、组合、表格填充与边框，以及图表系列和数据点颜色。
@@ -77,7 +77,7 @@ python3 scripts/audit.py
 
 ##状态
 
-改色功能在上一版自制测试稿中 **99 项应用内断言全部通过**；该版安装包已验证主题旧色选择、无需扫描直接替换、当前页默认范围、对象/多页同步、主题色回退、无效输入隔离和不保存关闭后立即重开。格式化剪贴板专项测试记录保留在首版验收中。历史功能验收及本版名称检查见 [验收记录](docs/acceptance/ACCEPTANCE.md)。实体 Command 快捷键、受组织策略管理的宏设置以及其他 Mac/Office 组合仍待补测。
+改色功能在 0.1.0-beta.2 的自制测试稿中 **99 项应用内断言全部通过**；该版安装包已验证主题旧色选择、无需扫描直接替换、当前页默认范围、对象/多页同步、主题色回退、无效输入隔离和不保存关闭后立即重开。格式化剪贴板专项测试记录保留在首版验收中。历史功能验收及本版默认范围检查见 [验收记录](docs/acceptance/ACCEPTANCE.md)。实体 Command 快捷键、受组织策略管理的宏设置以及其他 Mac/Office 组合仍待补测。
 
 ## 反馈与参与
 

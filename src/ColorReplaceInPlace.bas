@@ -1,5 +1,5 @@
 ' SPDX-License-Identifier: MIT
-' One-Click Color for Mac PowerPoint — 0.1.1
+' One-Click Color for Mac PowerPoint — 0.1.2
 Attribute VB_Name = "ColorReplaceInPlace"
 Option Explicit
 

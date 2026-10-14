@@ -1,5 +1,5 @@
 ' SPDX-License-Identifier: MIT
-' One-Click Color for Mac PowerPoint — 0.1.1
+' One-Click Color for Mac PowerPoint — 0.1.2
 Option Explicit
 
 #If Mac Then
@@ -285,12 +285,12 @@ Private Sub BuildPanel()
     Place RangeHint, 554, 300, 112, 20
     SetCaption RangeHint, "例：2,4-6"
     RangeHint.ForeColor = RGB(105, 113, 124)
-    mScope = "SELECTED"
-    SetCaption ScopeAll, "○ 所有页"
-    SetCaption ScopeSelected, "● 已选页 (" & CStr(mSelectedCount) & ")"
+    mScope = "ALL"
+    SetCaption ScopeAll, "● 所有页"
+    SetCaption ScopeSelected, "○ 已选页 (" & CStr(mSelectedCount) & ")"
     SetCaption ScopeCustom, "○ 指定页码"
-    ScopeAll.ForeColor = RGB(31, 41, 55)
-    ScopeSelected.ForeColor = RGB(0, 102, 204)
+    ScopeAll.ForeColor = RGB(0, 102, 204)
+    ScopeSelected.ForeColor = RGB(31, 41, 55)
     ScopeCustom.ForeColor = RGB(31, 41, 55)
 
     Place OKButton, 424, 342, 104, 30

@@ -1,6 +1,6 @@
 # One-Click Color for Mac PowerPoint
 
-**一键改色** · **0.1.1** · **MIT**
+**一键改色** · **0.1.2** · **MIT**
 
 A focused PowerPoint VBA add-in for **Mac desktop PowerPoint**. Replace RGB or theme colors across an open presentation, a slide selection, or specific slide numbers, without saving and reopening the file.
 
@@ -8,7 +8,7 @@ This project started with a practical need: update recurring colors in shapes, t
 
 ## Download
 
-[Mac installation bundle](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/download/v0.1.1/OneClickColor_MacPowerPoint_0_1_1_Mac.zip) · [Release and checksums](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/tag/v0.1.1)
+[Mac installation bundle](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/download/v0.1.2/OneClickColor_MacPowerPoint_0_1_2_Mac.zip) · [Release and checksums](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/tag/v0.1.2)
 
 ## Features
 
@@ -16,7 +16,7 @@ This project started with a practical need: update recurring colors in shapes, t
 - HEX or theme-slot source, object color sampling (including selected group children), and theme targets.
 - Direct exact replacement without scanning; optional nearby RGB candidate scanning.
 - Theme-to-theme migration retains tint; fixed RGB targets clear tint.
-- Defaults to the current slide when an object/text is selected; also supports multi-slide selections, all slides and explicit ranges.
+- Defaults to all slides when the panel opens; selected slides and explicit ranges remain available.
 - Accessible shape, text, group, table and chart colors.
 - Plain-text clipboard handling and input validation.
 - Dedicated undo for the most recent add-in operation.
@@ -25,7 +25,7 @@ The current UI and detailed user documentation are in Chinese. See the [Chinese 
 
 ![Chinese color picker panel](docs/images/panel.png)
 
-The previous version’s color engine passed 99 application-level checks. Version 0.1.1 updates the product name and visible labels; its UI verification is recorded separately. See the acceptance record for manual interaction checks and unverified combinations.
+The 0.1.0-beta.2 color engine passed 99 application-level checks. Version 0.1.2 changes only the initial page scope to all slides; its UI verification is recorded separately. See the acceptance record for manual interaction checks and unverified combinations.
 
 ## Build offline
 

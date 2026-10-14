@@ -1,12 +1,12 @@
 {
   "project": "一键改色 / One-Click Color for Mac PowerPoint",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "status": "release",
-  "package": "一键改色_0_1_1.ppam",
-  "sha256": "99dafc49bc648a62449ebb0f1039d04258b05d3d44eee2aecf8941defb41a1fb",
+  "package": "一键改色_0_1_2.ppam",
+  "sha256": "8c5fd734ff2d8a644d397c9d794f16f9afddce7026e74e29a2755d09191d57d6",
   "source_sha256": {
-    "src/ColorPickerForm.bas": "81bde4b51213bf40c35586d57c4cb3007a3acacf07ac7c8fb1f5d4aa080ae1df",
-    "src/ColorReplaceInPlace.bas": "db09d09e8dc47de8e7814e525998ae72bacaee28664d10d44e68584b7d122a19",
+    "src/ColorPickerForm.bas": "af58a4b51d0a6d04d0b0a21750e9c6b75daf408bd32910c627662e395c218708",
+    "src/ColorReplaceInPlace.bas": "d75ae1d231da247823472c954b62e2801eb52ffd1f928c90a9f7c86043d88a6b",
     "src/form-controls.json": "4526f1a313a1f36450f77afcad839222a6b785a9b4070ef8cdfa9921029e83f9",
     "src/ribbon.xml": "21e23162f5ff4bd39f3c60012198e7b96ffdcf0c27ebd2030212bb97ffef99d0"
   }

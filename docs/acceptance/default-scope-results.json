@@ -1,0 +1,20 @@
+{
+  "version": "0.1.2",
+  "date": "2026-10-14",
+  "package": "一键改色_0_1_2.ppam",
+  "sha256": "8c5fd734ff2d8a644d397c9d794f16f9afddce7026e74e29a2755d09191d57d6",
+  "scope_change": "initial panel scope SELECTED to ALL; other behavior unchanged",
+  "application": "Mac PowerPoint",
+  "test_deck": "self-created InteractiveFixture.pptx",
+  "checks": {
+    "initial_open_all_selected": true,
+    "selected_scope_switch": true,
+    "custom_scope_switch": true,
+    "reopen_all_selected": true,
+    "new_addin_enabled": true,
+    "old_registration_removed": true,
+    "no_test_deck_changes": true
+  },
+  "macro_protection_restored": "user confirmed restored on 2026-10-14; no automated setting readback",
+  "historical_functional_tests": "99 assertions from 0.1.0-beta.2 retained; not rerun for this default-only change"
+}
