@@ -1,5 +1,5 @@
 ' SPDX-License-Identifier: MIT
-' Mac PowerPoint Batch Color Replacer — 0.1.0-beta.2
+' One-Click Color for Mac PowerPoint — 0.1.1
 Attribute VB_Name = "ColorReplaceInPlace"
 Option Explicit
 
@@ -33,25 +33,25 @@ Private undoDeckName As String
 Public Sub ShowColorPanel(ByVal control As IRibbonControl)
     On Error GoTo Failed
     If Application.Presentations.Count = 0 Then
-        MsgBox "请先打开一份演示文稿。", vbInformation, "Mac 批量改色（测试版）"
+        MsgBox "请先打开一份演示文稿。", vbInformation, "一键改色"
         Exit Sub
     End If
     ColorPickerForm.OpenForDeck Application.ActivePresentation
     Exit Sub
 Failed:
-    MsgBox "无法打开选色面板：" & Err.Description, vbExclamation, "Mac 批量改色（测试版）"
+    MsgBox "无法打开选色面板：" & Err.Description, vbExclamation, "一键改色"
 End Sub
 
 Public Sub UndoLastColorChange(ByVal control As IRibbonControl)
     Dim deck As Presentation, color As ColorFormat, i As Long, restored As Long, expected As Long
     On Error GoTo Failed
     If undoN = 0 Then
-        MsgBox "当前没有可撤销的插件改色操作。", vbInformation, "Mac 批量改色（测试版）"
+        MsgBox "当前没有可撤销的插件改色操作。", vbInformation, "一键改色"
         Exit Sub
     End If
     Set deck = Application.ActivePresentation
     If deck.FullName <> undoDeckName Then
-        MsgBox "请先切回上次改色的演示文稿。", vbInformation, "Mac 批量改色（测试版）"
+        MsgBox "请先切回上次改色的演示文稿。", vbInformation, "一键改色"
         Exit Sub
     End If
     expected = undoN
@@ -69,13 +69,13 @@ Public Sub UndoLastColorChange(ByVal control As IRibbonControl)
         undoN = 0
         Erase undoItems
         undoDeckName = vbNullString
-        MsgBox "已恢复 " & CStr(restored) & " 处颜色（包括可访问的图表颜色）。", vbInformation, "Mac 批量改色（测试版）"
+        MsgBox "已恢复 " & CStr(restored) & " 处颜色（包括可访问的图表颜色）。", vbInformation, "一键改色"
     Else
-        MsgBox "仅恢复 " & CStr(restored) & "/" & CStr(expected) & " 处颜色。请检查页面，暂勿保存。", vbExclamation, "Mac 批量改色（测试版）"
+        MsgBox "仅恢复 " & CStr(restored) & "/" & CStr(expected) & " 处颜色。请检查页面，暂勿保存。", vbExclamation, "一键改色"
     End If
     Exit Sub
 Failed:
-    MsgBox "撤销未完成：" & Err.Description, vbExclamation, "Mac 批量改色（测试版）"
+    MsgBox "撤销未完成：" & Err.Description, vbExclamation, "一键改色"
 End Sub
 
 Public Function GetSelectedObjectColor(ByVal kind As String) As Long

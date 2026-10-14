@@ -81,7 +81,7 @@ def audit(root: Path = ROOT) -> dict:
         if path.suffix.lower() in {".pptx", ".pptm", ".ppam"}:
             allowed = (relative == "templates/powerpoint-base.pptm" or relative == "templates/qa-fixture.pptx" or
                        relative == "vendor/pyopenvba/_templates/blank_files/blank_presentation.pptm" or
-                       relative.startswith("release/MacPowerPointBatchColor_") or
+                       relative.startswith("release/MacPowerPointBatchColor_") or relative.startswith("release/一键改色_") or
                        relative.startswith("examples/"))
             if not allowed:
                 issues.append(f"Unexpected presentation: {relative}")

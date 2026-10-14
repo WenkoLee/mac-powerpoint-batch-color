@@ -38,7 +38,8 @@ class BuildTests(unittest.TestCase):
             with ZipFile(first) as archive:
                 ribbon = ET.fromstring(archive.read("customUI/customUI14.xml"))
                 labels = [node.get("label", "") for node in ribbon.iter()]
-                self.assertTrue(any("测试版" in label for label in labels))
+                self.assertIn("一键改色", labels)
+                self.assertFalse(any("测试版" in label for label in labels))
                 self.assertFalse(any(name.startswith("ppt/slides/") for name in archive.namelist()))
 
     def test_unicode_source_encoding(self):

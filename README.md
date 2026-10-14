@@ -1,17 +1,17 @@
-# Mac PowerPoint 批量改色
+# 一键改色
 
-**Mac PowerPoint Batch Color Replacer**
+**One-Click Color for Mac PowerPoint**
 
 专为 Mac 桌面版 PowerPoint 制作的中文批量改色加载项。在当前打开的演示文稿中，把固定 RGB 颜色或主题色替换为另一种颜色或主题色。
 
-**当前版本：0.1.0-beta.2 · 测试版**  
+**当前版本：0.1.1**  
 **开源许可证：MIT**  
-**发布渠道：GitHub 预发布 · 请先使用自制示例试用。**
+**发布渠道：GitHub 发布 · 请先使用自制示例试用。**
 
-## 下载测试版
+## 下载插件
 
-- **[下载 Mac 安装包](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/download/v0.1.0-beta.2/MacPowerPointBatchColor_0_1_0_beta_2_Mac.zip)**：普通用户推荐，包含插件、中文说明和自制示例。
-- [测试版发布页](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/tag/v0.1.0-beta.2)：独立 PPAM、完整源码包与 SHA256 校验文件。
+- **[下载 Mac 安装包](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/download/v0.1.1/OneClickColor_MacPowerPoint_0_1_1_Mac.zip)**：普通用户推荐，包含插件、中文说明和自制示例。
+- [发布页](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/tag/v0.1.1)：独立 PPAM、完整源码包与 SHA256 校验文件。
 - [安装说明](docs/INSTALL.md) · [用户指南](docs/USER_GUIDE.md) · [验收记录](docs/acceptance/ACCEPTANCE.md)
 
 ## 为什么开发这个插件
@@ -38,15 +38,15 @@
 
 ## 界面预览
 
-![Mac PowerPoint 批量改色面板](docs/images/panel-beta2.png)
+![一键改色面板](docs/images/panel.png)
 
 同屏查看旧色、目标色和扫描候选；可选择所有页、已选页或指定页码。更多说明见 [用户指南](docs/USER_GUIDE.md)。
 
 ## 普通用户从这里开始
 
-1. 阅读 [安装与卸载](docs/INSTALL.md)。测试版安装文件放在 [release](release/) 目录。
+1. 阅读 [安装与卸载](docs/INSTALL.md)。安装文件放在 [release](release/) 目录。
 2. 先使用 [自制示例](examples/) 熟悉操作，或复制一份自己的演示文稿进行试用。
-3. 在 PowerPoint 顶部选择 **Mac 批量改色·测试版 → 打开选色面板**。
+3. 在 PowerPoint 顶部选择 **一键改色 → 打开选色面板**。
 4. 选择旧色与页面范围；仅替换精确旧色时可直接继续，**扫描相近色**为可选步骤。
 5. 输入目标色或点击主题色，再点击 **替换选定范围**。
 6. 若需要回退，使用顶部 **撤销上次改色**；确认结果后正常保存文件。
@@ -75,9 +75,9 @@ python3 scripts/audit.py
 
 详细说明见 [开发与构建](docs/DEVELOPMENT.md)。实际加载项行为需要在 Mac PowerPoint 中验收，静态测试不能替代应用内测试。
 
-## 测试版状态
+##状态
 
-本次自制测试稿的 **99 项应用内断言全部通过**；最终安装包已验证主题旧色选择、无需扫描直接替换、当前页默认范围、对象/多页同步、主题色回退、无效输入隔离和不保存关闭后立即重开。格式化剪贴板专项测试记录保留在首版验收中。详见 [验收记录](docs/acceptance/ACCEPTANCE.md)。实体 Command 快捷键、受组织策略管理的宏设置以及其他 Mac/Office 组合仍待补测。
+改色功能在上一版自制测试稿中 **99 项应用内断言全部通过**；该版安装包已验证主题旧色选择、无需扫描直接替换、当前页默认范围、对象/多页同步、主题色回退、无效输入隔离和不保存关闭后立即重开。格式化剪贴板专项测试记录保留在首版验收中。历史功能验收及本版名称检查见 [验收记录](docs/acceptance/ACCEPTANCE.md)。实体 Command 快捷键、受组织策略管理的宏设置以及其他 Mac/Office 组合仍待补测。
 
 ## 反馈与参与
 

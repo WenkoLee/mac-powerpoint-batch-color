@@ -1,6 +1,6 @@
-# Mac PowerPoint Batch Color Replacer
+# One-Click Color for Mac PowerPoint
 
-**Mac PowerPoint 批量改色** · **0.1.0-beta.2 — Beta** · **MIT**
+**一键改色** · **0.1.1** · **MIT**
 
 A focused PowerPoint VBA add-in for **Mac desktop PowerPoint**. Replace RGB or theme colors across an open presentation, a slide selection, or specific slide numbers, without saving and reopening the file.
 
@@ -8,7 +8,7 @@ This project started with a practical need: update recurring colors in shapes, t
 
 ## Download
 
-[Mac installation bundle](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/download/v0.1.0-beta.2/MacPowerPointBatchColor_0_1_0_beta_2_Mac.zip) · [Beta release and checksums](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/tag/v0.1.0-beta.2)
+[Mac installation bundle](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/download/v0.1.1/OneClickColor_MacPowerPoint_0_1_1_Mac.zip) · [Release and checksums](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/tag/v0.1.1)
 
 ## Features
 
@@ -23,9 +23,9 @@ This project started with a practical need: update recurring colors in shapes, t
 
 The current UI and detailed user documentation are in Chinese. See the [Chinese README](README.md), [installation guide](docs/INSTALL.md), [user guide](docs/USER_GUIDE.md) and [compatibility notes](docs/COMPATIBILITY.md).
 
-![Chinese color picker panel](docs/images/panel-beta2.png)
+![Chinese color picker panel](docs/images/panel.png)
 
-The acceptance harness passed 99 application-level checks. See the acceptance record for manual interaction checks and unverified combinations.
+The previous version’s color engine passed 99 application-level checks. Version 0.1.1 updates the product name and visible labels; its UI verification is recorded separately. See the acceptance record for manual interaction checks and unverified combinations.
 
 ## Build offline
 
@@ -39,7 +39,7 @@ python3 scripts/audit.py
 
 The installable `.ppam` and checksums are written to `release/`. See [development instructions](docs/DEVELOPMENT.md).
 
-This is a beta prerelease. Application-level results and unverified items are listed in the [acceptance record](docs/acceptance/ACCEPTANCE.md).
+See the compatibility notes before using the add-in. Application-level results and unverified items are listed in the [acceptance record](docs/acceptance/ACCEPTANCE.md).
 
 ## Limits
 

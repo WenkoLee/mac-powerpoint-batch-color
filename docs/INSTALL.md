@@ -1,8 +1,8 @@
 # 安装与卸载
 
-当前版本为 **0.1.0-beta.2 测试版**，安装文件未经过数字签名。
+当前版本为 **0.1.1**，安装文件未经过数字签名。
 
-从 [GitHub 测试版发布页](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/tag/v0.1.0-beta.2) 下载以 `_Mac.zip` 结尾的安装包并解压。普通用户不需要构建源码。
+从 [GitHub发布页](https://github.com/WenkoLee/mac-powerpoint-batch-color/releases/tag/v0.1.1) 下载以 `_Mac.zip` 结尾的安装包并解压。普通用户不需要构建源码。
 
 ## 安装前
 
@@ -14,9 +14,9 @@
 
 1. 打开 PowerPoint，在顶部 macOS 菜单选择 **工具 → PowerPoint 加载项…**。
 2. 若安装过旧版“批量改色”，先取消旧版勾选，避免出现重复入口。
-3. 点击 **添加**，选择 `MacPowerPointBatchColor_0_1_0_beta_2.ppam`。
+3. 点击 **添加**，选择 `一键改色_0_1_1.ppam`。
 4. 对确认来源可信的这份本地插件，按 PowerPoint 提示选择启用宏。
-5. 加载成功后，顶部应出现 **Mac 批量改色·测试版** 选项卡。
+5. 加载成功后，顶部应出现 **一键改色** 选项卡。
 6. 打开自制示例，点击 **打开选色面板** 检查入口和预览。
 
 不同 PowerPoint 版本的提示和菜单名称可能略有差异。

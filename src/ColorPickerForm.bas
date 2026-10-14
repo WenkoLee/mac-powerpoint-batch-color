@@ -1,5 +1,5 @@
 ' SPDX-License-Identifier: MIT
-' Mac PowerPoint Batch Color Replacer — 0.1.0-beta.2
+' One-Click Color for Mac PowerPoint — 0.1.1
 Option Explicit
 
 #If Mac Then
@@ -122,7 +122,7 @@ End Function
 
 Private Sub ChooseScope(ByVal scope As String)
     If scope = "SELECTED" And mSelectedCount = 0 Then
-        MsgBox "请切回普通视图中的一张幻灯片。", vbInformation, "Mac 批量改色（测试版）"
+        MsgBox "请切回普通视图中的一张幻灯片。", vbInformation, "一键改色"
         Exit Sub
     End If
     mScope = scope
@@ -592,7 +592,7 @@ Private Sub ScanNearby()
     Set deck = Nothing
     mCount = ColorReplaceInPlace.CandidateCount()
     If mCount = 0 Then
-        MsgBox "所选范围没有找到接近的颜色。也可以不扫描，直接精确替换旧色。", vbInformation, "Mac 批量改色（测试版）"
+        MsgBox "所选范围没有找到接近的颜色。也可以不扫描，直接精确替换旧色。", vbInformation, "一键改色"
         Exit Sub
     End If
     ReDim mPick(1 To mCount)
@@ -615,7 +615,7 @@ Private Sub ScanNearby()
     ShowCandidates
     Exit Sub
 Failed:
-    MsgBox ChrW$(25195) & ChrW$(25551) & ChrW$(22833) & ChrW$(36133) & ChrW$(65306) & Err.Description, vbExclamation, ChrW$(25209) & ChrW$(37327) & ChrW$(25913) & ChrW$(33394)
+    MsgBox ChrW$(25195) & ChrW$(25551) & ChrW$(22833) & ChrW$(36133) & ChrW$(65306) & Err.Description, vbExclamation, "一键改色"
 End Sub
 
 Private Sub ShowCandidates()
@@ -683,17 +683,17 @@ Private Sub OKButton_Click()
         n = ColorReplaceInPlace.ApplySelection(deck, selected, CStr(LongBox.Value), pages)
     End If
     If n = 0 Then
-        MsgBox "所选范围没有匹配的颜色，未作更改。", vbInformation, "Mac 批量改色（测试版）"
+        MsgBox "所选范围没有匹配的颜色，未作更改。", vbInformation, "一键改色"
         Exit Sub
     End If
     mDeckName = vbNullString
     mReady = False
     Set mApp = Nothing
     Unload Me
-    MsgBox "已替换 " & CStr(n) & " 处颜色。需要回退时，请点插件的“撤销上次改色”。", vbInformation, "Mac 批量改色（测试版）"
+    MsgBox "已替换 " & CStr(n) & " 处颜色。需要回退时，请点插件的“撤销上次改色”。", vbInformation, "一键改色"
     Exit Sub
 Failed:
-    MsgBox "替换未完成：" & Err.Description, vbExclamation, "Mac 批量改色（测试版）"
+    MsgBox "替换未完成：" & Err.Description, vbExclamation, "一键改色"
 End Sub
 
 Private Sub CancelButton_Click()

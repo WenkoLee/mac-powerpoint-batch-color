@@ -11,7 +11,7 @@ licenses/            第三方许可证原文
 tests/               静态测试和 PowerPoint 内验收代码
 examples/            自制示例，不含客户资料
 docs/                用户说明、截图和验收记录
-release/             当前测试版安装包及校验值
+release/             当前安装包及校验值
 build/               临时构建与验收文件，Git 忽略
 ```
 

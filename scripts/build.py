@@ -94,7 +94,7 @@ def build(output: Path, with_qa: bool = False) -> Path:
         parts = {name: template.read(name) for name in template.namelist()}
         parts["ppt/vbaProject.bin"] = source.read("ppt/vbaProject.bin")
     parts["customUI/customUI14.xml"] = (ROOT / "src/ribbon.xml").read_bytes()
-    package = output / ("MacPowerPointBatchColor_" + re.sub(r"[^0-9A-Za-z]", "_", version) + ".ppam")
+    package = output / ("一键改色_" + re.sub(r"[^0-9A-Za-z]", "_", version) + ".ppam")
     stable_zip(package, parts)
     with ZipFile(package) as check:
         assert check.testzip() is None
@@ -131,8 +131,8 @@ def build(output: Path, with_qa: bool = False) -> Path:
 
     digest = hashlib.sha256(package.read_bytes()).hexdigest()
     (output / "SHA256SUMS.txt").write_text(f"{digest}  {package.name}\n")
-    manifest = {"project": "Mac PowerPoint Batch Color Replacer", "version": version,
-                "status": "beta", "package": package.name, "sha256": digest,
+    manifest = {"project": "一键改色 / One-Click Color for Mac PowerPoint", "version": version,
+                "status": "release", "package": package.name, "sha256": digest,
                 "source_sha256": {p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                                   for p in sorted((ROOT / "src").iterdir()) if p.is_file()}}
     (output / "build-manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
