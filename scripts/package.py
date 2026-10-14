@@ -48,10 +48,10 @@ Mac PowerPoint Batch Color Replacer · VERSION
 本包没有客户资料，不自动保存文件，不上传演示文稿。当前为未签名测试版；请阅读安装说明中的宏保护设置。独立源码另见 Source 压缩包。
 '''.replace('VERSION', version)
     archive(target / (stem + '_Mac.zip'), user_files, stem, {'README.md': intro})
-    sums = [hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name for p in sorted(target.glob('*.zip'))]
-    sums += [hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name for p in sorted((ROOT / 'release').glob('*.ppam'))]
+    sums = [hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name for p in sorted(target.glob(stem + '*.zip'))]
+    sums += [hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name for p in sorted((ROOT / 'release').glob(stem + '.ppam'))]
     (target / 'SHA256SUMS.txt').write_text('\n'.join(sums) + '\n')
-    for p in sorted(target.glob('*.zip')):
+    for p in sorted(target.glob(stem + '*.zip')):
         print(p.name, p.stat().st_size)
 
 if __name__ == '__main__':

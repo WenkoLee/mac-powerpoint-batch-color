@@ -381,5 +381,21 @@
   {
     "type": "Label",
     "name": "CancelButtonText"
+  },
+  {
+    "type": "Label",
+    "name": "PaletteOld"
+  },
+  {
+    "type": "Label",
+    "name": "PaletteTarget"
+  },
+  {
+    "type": "Label",
+    "name": "PaletteOldText"
+  },
+  {
+    "type": "Label",
+    "name": "PaletteTargetText"
   }
 ]

@@ -1,5 +1,5 @@
 ' SPDX-License-Identifier: MIT
-' Mac PowerPoint Batch Color Replacer — 0.1.0-beta.1
+' Mac PowerPoint Batch Color Replacer — 0.1.0-beta.2
 Option Explicit
 
 #If Mac Then
@@ -28,6 +28,8 @@ Private mTextRestore As Boolean
 Private mDeckName As String
 Private mReady As Boolean
 Private mScanPages As String
+Private mScanOldSpec As String
+Private mPaletteMode As String
 Private WithEvents mApp As Application
 Private mPickKind As String
 Private mBusy As Boolean
@@ -56,6 +58,7 @@ Public Sub OpenForDeck(ByVal deck As Presentation)
     mReady = True
     mPickKind = "F"
     Set mApp = Application
+    mApp_WindowSelectionChange Application.ActiveWindow.Selection
     Me.Show vbModeless
 End Sub
 
@@ -85,25 +88,17 @@ Private Function GetDeck() As Presentation
 End Function
 
 Private Sub CaptureSelectedSlides()
-    Dim i As Long, sel As Selection, spec As String, n As Long
+    Dim spec As String, n As Long
     On Error GoTo Finished
-    Set sel = Application.ActiveWindow.Selection
-    If sel.Type <> ppSelectionSlides Then GoTo Finished
-    For i = 1 To sel.SlideRange.Count
-        If Len(spec) > 0 Then spec = spec & ","
-        spec = spec & CStr(sel.SlideRange(i).SlideIndex)
-        n = n + 1
-    Next i
+    spec = ColorReplaceInPlace.SelectedPagesSpec()
+    n = UBound(Split(spec, ",")) + 1
     If spec <> mSelectedSpec Then
         mSelectedSpec = spec
         mSelectedCount = n
         If mReady And mScope = "SELECTED" Then ClearCandidates
     End If
 Finished:
-    Set sel = Nothing
-    If mReady Then
-        SetCaption ScopeSelected, IIf(mScope = "SELECTED", "● ", "○ ") & "已选页 (" & CStr(mSelectedCount) & ")"
-    End If
+    If mReady Then SetCaption ScopeSelected, IIf(mScope = "SELECTED", "● ", "○ ") & "已选页 (" & CStr(mSelectedCount) & ")"
 End Sub
 
 Private Sub UserForm_Activate()
@@ -117,7 +112,7 @@ Private Function ScopeSpec() As String
         Case "ALL": ScopeSpec = vbNullString
         Case "SELECTED"
             CaptureSelectedSlides
-            If mSelectedCount = 0 Then Err.Raise 5, , "请在左侧缩略图中选中页面，再回到面板点“已选页”。"
+            If mSelectedCount = 0 Then Err.Raise 5, , "请切回普通视图中的一张幻灯片。"
             ScopeSpec = mSelectedSpec
         Case "CUSTOM"
             If Len(Trim$(RangeBox.Value)) = 0 Then Err.Raise 5, , "请输入页码，例如 2,4-6。"
@@ -127,7 +122,7 @@ End Function
 
 Private Sub ChooseScope(ByVal scope As String)
     If scope = "SELECTED" And mSelectedCount = 0 Then
-        MsgBox "请在左侧缩略图中选中页面，再回到面板点“已选页”。", vbInformation, "Mac 批量改色（测试版）"
+        MsgBox "请切回普通视图中的一张幻灯片。", vbInformation, "Mac 批量改色（测试版）"
         Exit Sub
     End If
     mScope = scope
@@ -201,7 +196,7 @@ Private Sub BuildPanel()
     ThemeColor11.Font.Bold = True
     ThemeColor11.ForeColor = RGB(31, 41, 55)
     Place ThemeColor12, 28, 57, 285, 18
-    SetCaption ThemeColor12, ChrW$(36755) & ChrW$(20837) & " HEX" & ChrW$(65292) & ChrW$(25110) & ChrW$(20174) & ChrW$(24050) & ChrW$(36873) & ChrW$(23545) & ChrW$(35937) & ChrW$(21462) & ChrW$(33394)
+    SetCaption ThemeColor12, "HEX / 主题编号，或从已选对象取色"
     ThemeColor12.Font.Size = 10.5
     ThemeColor12.ForeColor = RGB(105, 113, 124)
 
@@ -232,7 +227,7 @@ Private Sub BuildPanel()
     SetCaption CommandButtonEsc, ChrW$(25195) & ChrW$(25551) & ChrW$(30456) & ChrW$(36817) & ChrW$(33394)
 
     Place CandidatesHint, 28, 156, 286, 17
-    SetCaption CandidatesHint, ChrW$(21305) & ChrW$(37197) & ChrW$(39068) & ChrW$(33394) & " " & ChrW$(183) & " " & ChrW$(28857) & ChrW$(20987) & ChrW$(21487) & ChrW$(21462) & ChrW$(28040) & ChrW$(21246) & ChrW$(36873)
+    SetCaption CandidatesHint, "直接替换精确旧色 · 扫描相近色可选"
     CandidatesHint.Font.Size = 10.5
     CandidatesHint.ForeColor = RGB(105, 113, 124)
     For i = 2 To 12
@@ -260,8 +255,12 @@ Private Sub BuildPanel()
     SetCaption StandardColor1, ChrW$(39044) & ChrW$(35272)
     StandardColor1.TextAlign = 2
 
-    Place ThemeHint, 354, 126, 292, 17
-    SetCaption ThemeHint, "主题颜色首行：B1  T1  B2  T2  A1…"
+    Place ThemeHint, 354, 126, 56, 17
+    SetCaption ThemeHint, "主题色"
+    Place PaletteOld, 412, 122, 104, 24
+    Place PaletteTarget, 522, 122, 126, 24
+    mPaletteMode = "TARGET"
+    SetPaletteMode "TARGET"
     ThemeHint.Font.Size = 10.5
     ThemeHint.ForeColor = RGB(105, 113, 124)
     For i = 1 To 10
@@ -286,12 +285,12 @@ Private Sub BuildPanel()
     Place RangeHint, 554, 300, 112, 20
     SetCaption RangeHint, "例：2,4-6"
     RangeHint.ForeColor = RGB(105, 113, 124)
-    mScope = "ALL"
-    SetCaption ScopeAll, "● 所有页"
-    SetCaption ScopeSelected, "○ 已选页 (" & CStr(mSelectedCount) & ")"
+    mScope = "SELECTED"
+    SetCaption ScopeAll, "○ 所有页"
+    SetCaption ScopeSelected, "● 已选页 (" & CStr(mSelectedCount) & ")"
     SetCaption ScopeCustom, "○ 指定页码"
-    ScopeAll.ForeColor = RGB(0, 102, 204)
-    ScopeSelected.ForeColor = RGB(31, 41, 55)
+    ScopeAll.ForeColor = RGB(31, 41, 55)
+    ScopeSelected.ForeColor = RGB(0, 102, 204)
     ScopeCustom.ForeColor = RGB(31, 41, 55)
 
     Place OKButton, 424, 342, 104, 30
@@ -378,7 +377,7 @@ End Sub
 
 Private Sub SyncLabels()
     Dim name As Variant
-    For Each name In Split("PickFill,PickLine,PickText,RadiusHint,CandidatesHint,TargetTitle,TargetHint,ThemeHint,ScopeTitle,ScopeAll,ScopeSelected,ScopeCustom,RangeHint,ColorLabel,ThemeColor11,ThemeColor12,StandardColor1,CommandButtonEsc,OKButton,CancelButton,ThemeColor1,ThemeColor2,ThemeColor3,ThemeColor4,ThemeColor5,ThemeColor6,ThemeColor7,ThemeColor8,ThemeColor9,ThemeColor10,StandardColor2,StandardColor3,StandardColor4,StandardColor5,StandardColor6,StandardColor7,StandardColor8,StandardColor9,StandardColor10,StandardColor11,StandardColor12", ",")
+    For Each name In Split("PaletteOld,PaletteTarget,PickFill,PickLine,PickText,RadiusHint,CandidatesHint,TargetTitle,TargetHint,ThemeHint,ScopeTitle,ScopeAll,ScopeSelected,ScopeCustom,RangeHint,ColorLabel,ThemeColor11,ThemeColor12,StandardColor1,CommandButtonEsc,OKButton,CancelButton,ThemeColor1,ThemeColor2,ThemeColor3,ThemeColor4,ThemeColor5,ThemeColor6,ThemeColor7,ThemeColor8,ThemeColor9,ThemeColor10,StandardColor2,StandardColor3,StandardColor4,StandardColor5,StandardColor6,StandardColor7,StandardColor8,StandardColor9,StandardColor10,StandardColor11,StandardColor12", ",")
         SyncLabel Me.Controls(CStr(name))
     Next name
 End Sub
@@ -435,7 +434,7 @@ Private Sub RefreshOldColor()
     TrackText HexBox
     If mBusy Then Exit Sub
     On Error GoTo Invalid
-    value = ColorReplaceInPlace.HexToLong(HexBox.Value)
+    value = ColorReplaceInPlace.ColorSpecToRGB(GetDeck(), CStr(HexBox.Value), ColorReplaceInPlace.CurrentSlideIndex())
     If value <> mOld Then ClearCandidates
     mOld = value
     ColorLabel.BackColor = value
@@ -455,6 +454,9 @@ End Sub
 Private Sub ClearCandidates()
     Dim i As Long
     mCount = 0
+    mScanPages = vbNullString
+    mScanOldSpec = vbNullString
+    SetCaption CandidatesHint, "直接替换精确旧色 · 扫描相近色可选"
     For i = 2 To 12
         Me.Controls("StandardColor" & CStr(i)).Visible = False
     Next i
@@ -487,15 +489,71 @@ Invalid:
 ChangeFinished:
 End Sub
 
-Private Sub ChooseTheme(ByVal index As Long)
-    mBusy = True
-    mTarget = ThemeCode(index)
-    LongBox.Value = mTarget
-    mTextLast(2) = mTarget
-    StandardColor1.BackColor = ThemeColorValue(index)
-    StandardColor1.ForeColor = ContrastColor(StandardColor1.BackColor)
+Private Sub SetPaletteMode(ByVal mode As String)
+    Dim item As Object, controlName As Variant
+    mPaletteMode = mode
+    SetCaption PaletteOld, "选择旧色"
+    SetCaption PaletteTarget, "选择目标色"
+    For Each controlName In Array("PaletteOld", "PaletteTarget")
+        Set item = Me.Controls(CStr(controlName))
+        item.TextAlign = 2
+        item.BorderStyle = 1
+        item.BorderColor = RGB(214, 228, 247)
+        item.BackColor = RGB(246, 247, 250)
+        item.ForeColor = RGB(105, 113, 124)
+    Next controlName
+    If mode = "OLD" Then Set item = PaletteOld Else Set item = PaletteTarget
+    item.BackColor = RGB(232, 241, 255)
+    item.ForeColor = RGB(0, 102, 204)
     SyncLabels
-    mBusy = False
+End Sub
+
+Private Sub PaletteOld_Click()
+    SetPaletteMode "OLD"
+End Sub
+
+Private Sub PaletteTarget_Click()
+    SetPaletteMode "TARGET"
+End Sub
+
+Private Sub PaletteOldText_Click()
+    PaletteOld_Click
+End Sub
+
+Private Sub PaletteTargetText_Click()
+    PaletteTarget_Click
+End Sub
+
+Private Sub HexBox_Enter()
+    If mReady Then SetPaletteMode "OLD"
+End Sub
+
+Private Sub LongBox_Enter()
+    If mReady Then SetPaletteMode "TARGET"
+End Sub
+
+Private Sub ChooseTheme(ByVal index As Long)
+    If mPaletteMode = "OLD" Then
+        ClearCandidates
+        mBusy = True
+        mOld = ThemeColorValue(index)
+        HexBox.Value = ThemeCode(index)
+        mTextLast(1) = ThemeCode(index)
+        ColorLabel.BackColor = mOld
+        ColorLabel.ForeColor = ContrastColor(mOld)
+        mBusy = False
+        RefreshInput HexBox
+    Else
+        mBusy = True
+        mTarget = ThemeCode(index)
+        LongBox.Value = mTarget
+        mTextLast(2) = mTarget
+        StandardColor1.BackColor = ThemeColorValue(index)
+        StandardColor1.ForeColor = ContrastColor(StandardColor1.BackColor)
+        mBusy = False
+        RefreshInput LongBox
+    End If
+    SyncLabels
 End Sub
 
 Private Sub ReadSelected(ByVal kind As String)
@@ -522,17 +580,19 @@ End Sub
 Private Sub ScanNearby()
     Dim distance As Double, i As Long, deck As Presentation
     On Error GoTo Failed
-    mOld = ColorReplaceInPlace.HexToLong(HexBox.Value)
+    Set deck = GetDeck
+    mOld = ColorReplaceInPlace.ColorSpecToRGB(deck, CStr(HexBox.Value), ColorReplaceInPlace.CurrentSlideIndex())
     If Not IsNumeric(RedBox.Value) Then Err.Raise 5, , ChrW$(30456) & ChrW$(36817) & ChrW$(33539) & ChrW$(22260) & ChrW$(24517) & ChrW$(39035) & ChrW$(26159) & ChrW$(25968) & ChrW$(23383) & ChrW$(12290)
     distance = CDbl(RedBox.Value)
     ClearCandidates
     Set deck = GetDeck
     mScanPages = ScopeSpec()
+    mScanOldSpec = UCase$(Trim$(CStr(HexBox.Value)))
     ColorReplaceInPlace.PrepareScan deck, mOld, distance, mScanPages
     Set deck = Nothing
     mCount = ColorReplaceInPlace.CandidateCount()
     If mCount = 0 Then
-        MsgBox ChrW$(27809) & ChrW$(26377) & ChrW$(25214) & ChrW$(21040) & ChrW$(22266) & ChrW$(23450) & " RGB " & ChrW$(39068) & ChrW$(33394) & ChrW$(12290) & ChrW$(24050) & ChrW$(32465) & ChrW$(23450) & ChrW$(20027) & ChrW$(39064) & ChrW$(33394) & ChrW$(30340) & ChrW$(23545) & ChrW$(35937) & ChrW$(35831) & ChrW$(20462) & ChrW$(25913) & ChrW$(20027) & ChrW$(39064) & ChrW$(12290), vbInformation, ChrW$(25209) & ChrW$(37327) & ChrW$(25913) & ChrW$(33394)
+        MsgBox "所选范围没有找到接近的颜色。也可以不扫描，直接精确替换旧色。", vbInformation, "Mac 批量改色（测试版）"
         Exit Sub
     End If
     ReDim mPick(1 To mCount)
@@ -560,6 +620,7 @@ End Sub
 
 Private Sub ShowCandidates()
     Dim slot As Long, index As Long, value As Long, item As Object, marker As String
+    SetCaption CandidatesHint, "匹配颜色 · 点击可取消勾选"
     For slot = 1 To 8
         Set item = Me.Controls("StandardColor" & CStr(slot + 1))
         index = mStart + slot - 1
@@ -593,35 +654,46 @@ Private Sub BlueBar_Change()
 End Sub
 
 Private Sub OKButton_Click()
-    Dim selected As String, i As Long, n As Long, pages As String, deck As Presentation
+    Dim selected As String, i As Long, n As Long, pages As String, deck As Presentation, prompt As String
     On Error GoTo Failed
     ValidateColorInput
     Set deck = GetDeck
     pages = ScopeSpec()
-    If pages <> mScanPages Then
-        ClearCandidates
-        Err.Raise 5, , "页面范围已改变，请重新扫描。"
+    If mCount > 0 Then
+        If pages <> mScanPages Or UCase$(Trim$(CStr(HexBox.Value))) <> mScanOldSpec Then ClearCandidates
     End If
-    If mCount = 0 Then Err.Raise 5, , ChrW$(35831) & ChrW$(20808) & ChrW$(25195) & ChrW$(25551) & ChrW$(30456) & ChrW$(36817) & ChrW$(33394) & ChrW$(12290)
-    For i = 1 To mCount
-        If mPick(i) Then
-            If Len(selected) > 0 Then selected = selected & ","
-            selected = selected & ColorReplaceInPlace.LongToHex(ColorReplaceInPlace.CandidateColor(i))
-            n = n + 1
-        End If
-    Next i
-    If n = 0 Then Err.Raise 5, , ChrW$(35831) & ChrW$(33267) & ChrW$(23569) & ChrW$(21246) & ChrW$(36873) & ChrW$(19968) & ChrW$(31181) & ChrW$(26087) & ChrW$(39068) & ChrW$(33394) & ChrW$(12290)
-    If MsgBox("将所选范围内勾选的 " & CStr(n) & " 种颜色替换？", _
-        vbYesNo + vbQuestion, "确认替换") <> vbYes Then Exit Sub
-    n = ColorReplaceInPlace.ApplySelection(deck, selected, LongBox.Value, pages)
+    If mCount = 0 Then
+        selected = CStr(HexBox.Value)
+        prompt = "将所选范围的旧色 " & selected & " 精确替换为 " & CStr(LongBox.Value) & "？"
+    Else
+        For i = 1 To mCount
+            If mPick(i) Then
+                If Len(selected) > 0 Then selected = selected & ","
+                selected = selected & ColorReplaceInPlace.LongToHex(ColorReplaceInPlace.CandidateColor(i))
+                n = n + 1
+            End If
+        Next i
+        If n = 0 Then Err.Raise 5, , "请至少勾选一种旧颜色。"
+        prompt = "将所选范围内勾选的 " & CStr(n) & " 种颜色替换为 " & CStr(LongBox.Value) & "？"
+    End If
+    If MsgBox(prompt, vbYesNo + vbQuestion, "确认替换") <> vbYes Then Exit Sub
+    If mCount = 0 Then
+        n = ColorReplaceInPlace.ApplyExact(deck, selected, CStr(LongBox.Value), pages)
+    Else
+        n = ColorReplaceInPlace.ApplySelection(deck, selected, CStr(LongBox.Value), pages)
+    End If
+    If n = 0 Then
+        MsgBox "所选范围没有匹配的颜色，未作更改。", vbInformation, "Mac 批量改色（测试版）"
+        Exit Sub
+    End If
     mDeckName = vbNullString
     mReady = False
     Set mApp = Nothing
     Unload Me
-    MsgBox "已替换 " & CStr(n) & " 处颜色。要完整回退，请点插件的“撤销上次改色”。", vbInformation, "Mac 批量改色（测试版）"
+    MsgBox "已替换 " & CStr(n) & " 处颜色。需要回退时，请点插件的“撤销上次改色”。", vbInformation, "Mac 批量改色（测试版）"
     Exit Sub
 Failed:
-    MsgBox ChrW$(26367) & ChrW$(25442) & ChrW$(26410) & ChrW$(23436) & ChrW$(25104) & ChrW$(65306) & Err.Description, vbExclamation, ChrW$(25209) & ChrW$(37327) & ChrW$(25913) & ChrW$(33394)
+    MsgBox "替换未完成：" & Err.Description, vbExclamation, "Mac 批量改色（测试版）"
 End Sub
 
 Private Sub CancelButton_Click()
@@ -753,7 +825,7 @@ Private Sub mApp_WindowSelectionChange(ByVal Sel As Selection)
     CaptureSelectedSlides
     If Sel.Type = ppSelectionShapes Or Sel.Type = ppSelectionText Then
         value = ColorReplaceInPlace.GetSelectedObjectColor(mPickKind)
-        If value <> mOld Then ClearCandidates
+        If UCase$(Trim$(CStr(HexBox.Value))) <> ColorReplaceInPlace.LongToHex(value) Then ClearCandidates
         mBusy = True
         mOld = value
         HexBox.Value = ColorReplaceInPlace.LongToHex(value)
@@ -1079,10 +1151,8 @@ Private Sub RefreshInput(ByVal box As Object)
     If box.Name <> "HexBox" And box.Name <> "LongBox" Then Exit Sub
     spec = UCase$(Replace$(Trim$(CStr(box.Value)), "#", ""))
     valid = (Len(spec) = 6 And Not spec Like "*[!0-9A-F]*")
+    If ColorReplaceInPlace.ThemeIndexFromCode(spec) > 0 Then valid = True
     If box.Name = "LongBox" Then
-        Select Case spec
-            Case "B1", "T1", "B2", "T2", "A1", "A2", "A3", "A4", "A5", "A6": valid = True
-        End Select
         Set hint = TargetHint
     Else
         Set hint = ThemeColor12
@@ -1092,13 +1162,13 @@ Private Sub RefreshInput(ByVal box As Object)
             SetCaption hint, "输入 HEX，或点击下方主题色"
             RefreshTargetColor
         Else
-            SetCaption hint, "输入 HEX，或从已选对象取色"
+            SetCaption hint, "HEX / 主题编号，或从已选对象取色"
             RefreshOldColor
         End If
         hint.ForeColor = RGB(105, 113, 124)
         Me.Controls(box.Name & "Frame").BorderColor = RGB(207, 213, 222)
     Else
-        SetCaption hint, "请输入六位色号：0-9、A-F"
+        SetCaption hint, "请输入 HEX 或 B1/T1/B2/T2/A1-A6"
         hint.ForeColor = RGB(170, 77, 55)
         Me.Controls(box.Name & "Frame").BorderColor = RGB(205, 130, 110)
     End If
@@ -1140,7 +1210,7 @@ End Sub
 
 Private Sub ValidateColorInput()
     Dim value As Long, spec As String
-    value = ColorReplaceInPlace.HexToLong(CStr(HexBox.Value))
+    value = ColorReplaceInPlace.ColorSpecToRGB(GetDeck(), CStr(HexBox.Value), ColorReplaceInPlace.CurrentSlideIndex())
     spec = UCase$(Trim$(CStr(LongBox.Value)))
     Select Case spec
         Case "B1", "T1", "B2", "T2", "A1", "A2", "A3", "A4", "A5", "A6"
@@ -1241,11 +1311,7 @@ Private Sub PasteText(ByVal box As Object)
     color = (box.Name = "HexBox" Or box.Name = "LongBox")
     incoming = CleanPlainInput(incoming, color)
     If color Then
-        If box.Name = "LongBox" Then
-            If incoming Like "*[!0-9A-FT]*" Then Err.Raise 5, , "剪贴板包含无效字符，请只复制 HEX 色号或主题色编号。"
-        Else
-            If incoming Like "*[!0-9A-F]*" Then Err.Raise 5, , "剪贴板包含无效字符，请只复制六位 HEX 色号。"
-        End If
+        If ColorReplaceInPlace.ThemeIndexFromCode(incoming) = 0 And incoming Like "*[!0-9A-F]*" Then Err.Raise 5, , "剪贴板包含无效字符，请只复制 HEX 色号或主题色编号。"
     End If
     If Len(incoming) = 0 Then Err.Raise 5, , "剪贴板中没有色号文字。"
     cursor = box.SelStart: selected = box.SelLength

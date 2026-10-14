@@ -1,13 +1,13 @@
 {
   "project": "Mac PowerPoint Batch Color Replacer",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
   "status": "beta",
-  "package": "MacPowerPointBatchColor_0_1_0_beta_1.ppam",
-  "sha256": "266e692a466fc9cd9d0e69ae04dc2e8bab69beb8d76b53caaa263afe66e15e51",
+  "package": "MacPowerPointBatchColor_0_1_0_beta_2.ppam",
+  "sha256": "515e81958ddf86d883d5f20f10e74903a7385130f6a2f779c423b5664e987478",
   "source_sha256": {
-    "src/ColorPickerForm.bas": "92ab9671264ecde877f6fdfb76b26f9ceb1bd8c20338e643131e8fab2a5b1600",
-    "src/ColorReplaceInPlace.bas": "262d6c188a6a8374de4461f2ab7f7c22790fbb7dcc6435d57079abd2dfc3ca06",
-    "src/form-controls.json": "6f525b4250b82640f464b56e8ef475eaccad6a843fa7531d6eae1809d06dca89",
-    "src/ribbon.xml": "fc3eed5f7548f662ac83429ce54a37fa451c2f839afb16f0cbd512ae4fcaff4c"
+    "src/ColorPickerForm.bas": "2ad9d05902d0cf7412219ac8fa9237f917c206b5af4549d3905461c9a0c48e1b",
+    "src/ColorReplaceInPlace.bas": "0d869ed8756467bc6c1f2572893ad08c2fa64144eef7534f0bc3a97d07cc21ce",
+    "src/form-controls.json": "4526f1a313a1f36450f77afcad839222a6b785a9b4070ef8cdfa9921029e83f9",
+    "src/ribbon.xml": "db0ccd7938fa1e057a7a1a49e3e80e5824708802d730f229228d455a33fb6aff"
   }
 }

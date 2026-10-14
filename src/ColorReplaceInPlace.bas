@@ -1,5 +1,5 @@
 ' SPDX-License-Identifier: MIT
-' Mac PowerPoint Batch Color Replacer — 0.1.0-beta.1
+' Mac PowerPoint Batch Color Replacer — 0.1.0-beta.2
 Attribute VB_Name = "ColorReplaceInPlace"
 Option Explicit
 
@@ -17,6 +17,8 @@ Private pickedColors() As Long
 Private pickedN As Long
 Private pageMask() As Boolean
 Private allPages As Boolean
+Private sourceTheme As Long
+Private sourceThemeRGB As Long
 Private baseColor As Long
 Private radius As Double
 Private doReplace As Boolean
@@ -77,26 +79,96 @@ Failed:
 End Sub
 
 Public Function GetSelectedObjectColor(ByVal kind As String) As Long
-    Dim sel As Selection, sh As Shape, color As ColorFormat
+    Dim sel As Selection, sh As Shape, color As Object
     Set sel = Application.ActiveWindow.Selection
     If sel.Type = ppSelectionText And UCase$(Trim$(kind)) = "T" Then
         Set color = sel.TextRange.Font.Color
     ElseIf sel.Type = ppSelectionShapes Or sel.Type = ppSelectionText Then
-        If sel.ShapeRange.Count <> 1 Then Err.Raise 5, , "请只选中一个形状。"
-        Set sh = sel.ShapeRange(1)
+        Set sh = SelectedLeafShape(sel)
         Select Case UCase$(Trim$(kind))
             Case "F": Set color = sh.Fill.ForeColor
             Case "L": Set color = sh.Line.ForeColor
             Case "T"
-                If Not sh.HasTextFrame Then Err.Raise 5, , "所选形状没有文字。"
-                If Not sh.TextFrame.HasText Then Err.Raise 5, , "所选形状没有文字。"
+                If Not sh.HasTextFrame Then Err.Raise 5, , "所选对象没有文字。"
+                If Not sh.TextFrame.HasText Then Err.Raise 5, , "所选对象没有文字。"
                 Set color = sh.TextFrame.TextRange.Runs(1).Font.Color
             Case Else: Err.Raise 5, , "请选择填充、线条或文字取色。"
         End Select
     Else
-        Err.Raise 5, , "请先在页面中选中一个形状或一段文字。"
+        Err.Raise 5, , "请在页面中选中一个对象或一段文字。"
     End If
     GetSelectedObjectColor = color.RGB
+End Function
+
+Private Function SelectedLeafShape(ByVal sel As Selection) As Shape
+    Dim selectionObject As Object, children As Object, item As Shape
+    Set selectionObject = sel
+    ' Late binding keeps older Mac type libraries loadable.
+    On Error Resume Next
+    If selectionObject.HasChildShapeRange Then Set children = selectionObject.ChildShapeRange
+    Err.Clear
+    On Error GoTo 0
+    If Not children Is Nothing Then
+        If children.Count <> 1 Then Err.Raise 5, , "请只选中一个组合内对象。"
+        Set item = children(1)
+    Else
+        If sel.ShapeRange.Count <> 1 Then Err.Raise 5, , "请只选中一个对象。"
+        Set item = sel.ShapeRange(1)
+    End If
+    If item.Type = msoGroup Then Err.Raise 5, , "当前选中整个组合，请继续点击组合中的具体对象。"
+    Set SelectedLeafShape = item
+End Function
+
+Public Function CurrentSlideIndex() As Long
+    On Error Resume Next
+    CurrentSlideIndex = Application.ActiveWindow.View.Slide.SlideIndex
+    On Error GoTo 0
+End Function
+
+Public Function SelectedPagesSpec() As String
+    Dim sel As Selection, i As Long, spec As String, page As Long
+    Set sel = Application.ActiveWindow.Selection
+    If sel.Type = ppSelectionSlides Then
+        For i = 1 To sel.SlideRange.Count
+            If Len(spec) > 0 Then spec = spec & ","
+            spec = spec & CStr(sel.SlideRange(i).SlideIndex)
+        Next i
+    Else
+        page = CurrentSlideIndex()
+        If page > 0 Then spec = CStr(page)
+    End If
+    If Len(spec) = 0 Then Err.Raise 5, , "请切回普通视图中的一张幻灯片。"
+    SelectedPagesSpec = spec
+End Function
+
+Public Function ThemeIndexFromCode(ByVal value As String) As Long
+    Select Case UCase$(Trim$(value))
+        Case "B1": ThemeIndexFromCode = msoThemeColorBackground1
+        Case "T1": ThemeIndexFromCode = msoThemeColorText1
+        Case "B2": ThemeIndexFromCode = msoThemeColorBackground2
+        Case "T2": ThemeIndexFromCode = msoThemeColorText2
+        Case "A1": ThemeIndexFromCode = msoThemeColorAccent1
+        Case "A2": ThemeIndexFromCode = msoThemeColorAccent2
+        Case "A3": ThemeIndexFromCode = msoThemeColorAccent3
+        Case "A4": ThemeIndexFromCode = msoThemeColorAccent4
+        Case "A5": ThemeIndexFromCode = msoThemeColorAccent5
+        Case "A6": ThemeIndexFromCode = msoThemeColorAccent6
+    End Select
+End Function
+
+Public Function ColorSpecToRGB(ByVal deck As Presentation, ByVal value As String, Optional ByVal slideIndex As Long = 0) As Long
+    Dim theme As Long, master As Object
+    theme = ThemeIndexFromCode(value)
+    If theme = 0 Then
+        ColorSpecToRGB = HexToLong(value)
+    Else
+        If slideIndex > 0 Then
+            Set master = deck.Slides(slideIndex).Design.SlideMaster
+        Else
+            Set master = deck.Designs(1).SlideMaster
+        End If
+        ColorSpecToRGB = master.Theme.ThemeColorScheme(ChartThemeIndex(theme)).RGB
+    End If
 End Function
 
 Public Sub PrepareScan(ByVal deck As Presentation, ByVal oldColor As Long, _
@@ -109,6 +181,7 @@ Public Sub PrepareScan(ByVal deck As Presentation, ByVal oldColor As Long, _
     ReDim foundColors(1 To 16)
     ReDim foundCounts(1 To 16)
     doReplace = False
+    sourceTheme = 0
     WalkDeck deck
     SortFound
 End Sub
@@ -132,6 +205,7 @@ Public Function ApplySelection(ByVal deck As Presentation, ByVal selectedHex As 
     ParsePages deck, pages
     ParsePicked selectedHex
     ParseTarget target
+    sourceTheme = 0
     doReplace = True
     changedN = 0
     undoN = 0
@@ -140,6 +214,30 @@ Public Function ApplySelection(ByVal deck As Presentation, ByVal selectedHex As 
     WalkDeck deck
     ApplySelection = changedN
 End Function
+
+Public Function ApplyExact(ByVal deck As Presentation, ByVal oldSpec As String, ByVal target As String, ByVal pages As String) As Long
+    ParsePages deck, pages
+    ParseTarget target
+    sourceTheme = ThemeIndexFromCode(oldSpec)
+    pickedN = 0
+    ReDim pickedColors(1 To 1)
+    If sourceTheme = 0 Then
+        pickedColors(1) = HexToLong(oldSpec)
+        pickedN = 1
+    End If
+    doReplace = True
+    changedN = 0
+    undoN = 0
+    ReDim undoItems(1 To 64)
+    undoDeckName = deck.FullName
+    WalkDeck deck
+    ApplyExact = changedN
+End Function
+
+Private Sub SetSourceThemeBase(ByVal master As Object)
+    If sourceTheme = 0 Then Exit Sub
+    sourceThemeRGB = master.Theme.ThemeColorScheme(ChartThemeIndex(sourceTheme)).RGB
+End Sub
 
 Private Sub ParsePages(ByVal deck As Presentation, ByVal spec As String)
     Dim terms() As String, term As Variant, ends() As String
@@ -172,6 +270,7 @@ Private Sub WalkDeck(ByVal deck As Presentation)
     Dim i As Long, j As Long, k As Long, d As Design, layout As CustomLayout
     For i = 1 To deck.Slides.Count
         If pageMask(i) Then
+            SetSourceThemeBase deck.Slides(i).Design.SlideMaster
             For j = 1 To deck.Slides(i).Shapes.Count
                 WalkShape deck.Slides(i).Shapes(j), "S|" & CStr(deck.Slides(i).SlideID) & "|" & CStr(j)
             Next j
@@ -183,6 +282,7 @@ Private Sub WalkDeck(ByVal deck As Presentation)
     If Not allPages Then Exit Sub
     For i = 1 To deck.Designs.Count
         Set d = deck.Designs(i)
+        SetSourceThemeBase d.SlideMaster
         For j = 1 To d.SlideMaster.Shapes.Count
             WalkShape d.SlideMaster.Shapes(j), "M|" & CStr(i) & "|" & CStr(j)
         Next j
@@ -198,13 +298,14 @@ End Sub
 Private Sub WalkShape(ByVal sh As Shape, ByVal address As String)
     Dim i As Long, r As Long, c As Long, b As Long, cellShape As Shape
     On Error Resume Next
-    Touch sh.Fill.ForeColor, address & "|F"
-    Touch sh.Line.ForeColor, address & "|L"
     If sh.Type = msoGroup Then
         For i = 1 To sh.GroupItems.Count
             WalkShape sh.GroupItems(i), address & "." & CStr(i)
         Next i
+        Exit Sub
     End If
+    Touch sh.Fill.ForeColor, address & "|F"
+    Touch sh.Line.ForeColor, address & "|L"
     If sh.HasTable Then
         For r = 1 To sh.Table.Rows.Count
             For c = 1 To sh.Table.Columns.Count
@@ -229,10 +330,18 @@ Private Sub WalkShape(ByVal sh As Shape, ByVal address As String)
 End Sub
 
 Private Sub WalkText(ByVal t As TextRange, ByVal address As String)
-    Dim i As Long
+    Dim i As Long, n As Long, starts() As Long, lengths() As Long
     On Error Resume Next
-    For i = 1 To t.Runs.Count
-        Touch t.Runs(i).Font.Color, address & ":" & CStr(i)
+    n = t.Runs.Count
+    If n = 0 Then Exit Sub
+    ReDim starts(1 To n): ReDim lengths(1 To n)
+    For i = 1 To n
+        starts(i) = t.Runs(i).Start - t.Start + 1
+        lengths(i) = t.Runs(i).Length
+    Next i
+    ' Color changes can merge runs. Character offsets remain stable.
+    For i = 1 To n
+        If lengths(i) > 0 Then Touch t.Characters(starts(i), lengths(i)).Font.Color, address & ":" & CStr(starts(i)) & ":" & CStr(lengths(i))
     Next i
     On Error GoTo 0
 End Sub
@@ -248,8 +357,8 @@ Private Sub WalkChart(ByVal chart As Object, ByVal address As String)
         Set series = chart.SeriesCollection(i)
         preserveFill = False: preserveLine = False: savedN = 0
         If doReplace Then
-            preserveFill = WillReplace(series.Format.Fill.ForeColor)
-            preserveLine = WillReplace(series.Format.Line.ForeColor)
+            preserveFill = WillReplace(series.Format.Fill.ForeColor, address & "|Q:")
+            preserveLine = WillReplace(series.Format.Line.ForeColor, address & "|Q:")
         End If
         ReDim before(1 To series.Points.Count * 2 + 1)
         If preserveFill Or preserveLine Then
@@ -294,13 +403,23 @@ Private Function ChartThemeIndex(ByVal value As Long) As Long
     End Select
 End Function
 
-Private Function WillReplace(ByVal color As Object) As Boolean
-    Dim i As Long
+Private Function WillReplace(ByVal color As Object, ByVal address As String) As Boolean
+    Dim i As Long, value As Long, theme As Long
     On Error GoTo Done
-    If color.ObjectThemeColor <> msoNotThemeColor Then Exit Function
-    For i = 1 To pickedN
-        If color.RGB = pickedColors(i) Then WillReplace = True: Exit Function
-    Next i
+    value = color.RGB
+    If sourceTheme > 0 Then
+        theme = color.ObjectThemeColor
+        If theme > 0 Then
+            WillReplace = (ChartThemeIndex(theme) = ChartThemeIndex(sourceTheme))
+        ElseIf InStr(address, "|Q:") > 0 Then
+            ' Mac chart APIs can report a theme-linked color as RGB.
+            WillReplace = (value = sourceThemeRGB)
+        End If
+    Else
+        For i = 1 To pickedN
+            If value = pickedColors(i) Then WillReplace = True: Exit Function
+        Next i
+    End If
 Done:
 End Function
 
@@ -324,26 +443,25 @@ Private Sub RestoreColor(ByVal color As Object, ByVal value As Long, ByVal theme
     color.TintAndShade = tint
 End Sub
 
-Private Sub Touch(ByVal color As ColorFormat, ByVal address As String)
-    Dim value As Long, i As Long
+Private Sub Touch(ByVal color As Object, ByVal address As String)
+    Dim value As Long, oldTheme As Long, oldTint As Single
     On Error GoTo SkipColor
-    If color.ObjectThemeColor <> msoNotThemeColor Then Exit Sub
     value = color.RGB
     If Not doReplace Then
         If ColorDistance(value, baseColor) <= radius Then AddFound value
-    Else
-        For i = 1 To pickedN
-            If value = pickedColors(i) Then
-                If useTheme Then
-                    color.ObjectThemeColor = newTheme
-                Else
-                    color.RGB = newColor
-                End If
-                RecordUndo address, value
-                changedN = changedN + 1
-                Exit For
-            End If
-        Next i
+    ElseIf WillReplace(color, address) Then
+        oldTheme = color.ObjectThemeColor
+        If oldTheme < 0 Then oldTheme = 0
+        oldTint = color.TintAndShade
+        If useTheme Then
+            color.ObjectThemeColor = newTheme
+            If sourceTheme > 0 Then color.TintAndShade = oldTint Else color.TintAndShade = 0
+        Else
+            color.RGB = newColor
+            color.TintAndShade = 0
+        End If
+        RecordUndo address, value, oldTheme, oldTint
+        changedN = changedN + 1
     End If
 SkipColor:
 End Sub
@@ -385,13 +503,13 @@ Private Function ResolveColor(ByVal deck As Presentation, ByVal address As Strin
         Case Else
             prop = Split(parts(3), ":")
             Select Case prop(0)
-                Case "X": Set ResolveColor = sh.TextFrame.TextRange.Runs(CLng(prop(1))).Font.Color
+                Case "X": Set ResolveColor = sh.TextFrame.TextRange.Characters(CLng(prop(1)), CLng(prop(2))).Font.Color
                 Case "B": Set ResolveColor = sh.Table.Cell(CLng(prop(1)), CLng(prop(2))).Borders(CLng(prop(3))).ForeColor
                 Case "C"
                     Select Case prop(3)
                         Case "F": Set ResolveColor = sh.Table.Cell(CLng(prop(1)), CLng(prop(2))).Shape.Fill.ForeColor
                         Case "L": Set ResolveColor = sh.Table.Cell(CLng(prop(1)), CLng(prop(2))).Shape.Line.ForeColor
-                        Case "X": Set ResolveColor = sh.Table.Cell(CLng(prop(1)), CLng(prop(2))).Shape.TextFrame.TextRange.Runs(CLng(prop(4))).Font.Color
+                        Case "X": Set ResolveColor = sh.Table.Cell(CLng(prop(1)), CLng(prop(2))).Shape.TextFrame.TextRange.Characters(CLng(prop(4)), CLng(prop(5))).Font.Color
                     End Select
                 Case "Q"
                     Set series = sh.Chart.SeriesCollection(CLng(prop(1)))

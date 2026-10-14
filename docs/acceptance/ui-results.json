@@ -1,19 +1,29 @@
 {
+  "version": "0.1.0-beta.2",
+  "date": "2026-10-14",
   "status": "pass_with_documented_limits",
-  "selected_page_changes": 6,
-  "selected_page_undo_restored": 6,
-  "all_pages_changes": 37,
-  "formatted_clipboard": "华文琥珀 112233 -> plain 112233",
-  "invalid_input": "12G blocked; panel remains usable",
-  "reopen_without_save": "passed",
-  "temporary_addins_removed": true,
-  "original_v7_reenabled": true,
-  "macro_protection_restored": "user confirmed",
+  "package_sha256": "515e81958ddf86d883d5f20f10e74903a7385130f6a2f779c423b5664e987478",
+  "theme_source_ui": "A1 -> A2 without scan; slide 3 only",
+  "theme_changes": 8,
+  "theme_undo_restored": 8,
+  "saved_xml_verified": true,
+  "default_current_page": "object-selected slide 3; selected scope defaults to 1",
+  "selection_sync": "4F81BD -> AABAD7 while panel remains open",
+  "multi_page_sync": "Shift+Down selects slides 2-4; panel count 3",
+  "scan_optional": "direct replacement and optional nearby candidate list both verified",
+  "rgb_direct_changes": 12,
+  "invalid_target": "12G blocked; panel remains editable",
+  "reopen_without_save": "passed; original 204F92 retained on slides 2-4",
+  "local_beta2_enabled": true,
+  "old_v7_registration_removed": true,
+  "global_macro_protection_changed": false,
+  "macro_protection_readback": "not performed; user confirmed restored before this session",
   "not_verified": [
     "physical Command shortcuts",
     "partial text selection",
     "text undo redo",
-    "cold start beta with macro protection restored",
-    "other Office/macOS combinations"
-  ]
+    "other Office/macOS combinations",
+    "all organization macro policies"
+  ],
+  "historical_formatted_clipboard_test": "v0.1.0-beta.1; unchanged clipboard implementation"
 }

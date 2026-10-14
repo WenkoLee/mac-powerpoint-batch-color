@@ -86,7 +86,7 @@ def build(output: Path, with_qa: bool = False) -> Path:
 
     with PowerPointFile(mother) as check:
         assert set(check.module_names()) == {"ColorReplaceInPlace", "ColorPickerForm"}
-        assert len(check.forms()) == 1 and len(check.forms()[0].walk()) == 95
+        assert len(check.forms()) == 1 and len(check.forms()[0].walk()) == len(json.loads((ROOT / "src/form-controls.json").read_text()))
         if check.validate():
             raise ValueError(check.validate())
 

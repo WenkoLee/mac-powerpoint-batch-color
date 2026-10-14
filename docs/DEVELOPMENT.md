@@ -31,7 +31,7 @@ python3 scripts/build.py
 
 1. 读取 `src/` 的可读 UTF-8 VBA 源码。
 2. 将中文字符串转换为 VBA 的 `ChrW$` 表达式，避免宿主代码页差异导致乱码。
-3. 按 `form-controls.json` 创建 95 个界面控件，附加面板代码。
+3. 按 `form-controls.json` 创建 99 个界面控件，附加面板代码。
 4. 使用清理后的空白宿主项目生成 VBA 工程。
 5. 将工程和功能区 XML 放入构建用 `.ppam` 容器，输出安装包。
 6. 写出 SHA256 校验值和源码哈希清单。
