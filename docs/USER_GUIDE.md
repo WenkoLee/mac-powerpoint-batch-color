@@ -91,12 +91,6 @@ Mac 图表接口不能可靠读回主题色位；图表按主题旧色匹配时�
 
 格式化剪贴板专项测试及截图保留于 [首版验收](https://github.com/WenkoLee/mac-powerpoint-batch-color/blob/v0.1.0-beta.1/docs/acceptance/ACCEPTANCE.md)。
 
-## 处理范围与示例
+## 处理边界
 
 支持可访问的原生形状、文字、组合子对象、表格填充/文字/边框，以及图表系列/数据点填充和线条。图片像素、渐变各色标、SmartArt 内部颜色、图表标题/坐标轴等不承诺完整处理。
-
-`examples/BatchColorDemo.pptx` 是可重复试用的自制示例。以下为首版相近蓝色统一替换为 `0086A1` 的真实截图，紫色保持原样。
-
-![示例修改前](images/demo-before.png)
-
-![示例修改后](images/demo-after.png)
