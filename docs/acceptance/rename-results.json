@@ -9,6 +9,6 @@
   "invalid_target_title": "一键改色",
   "invalid_target_blocked": true,
   "old_version_registration_removed": true,
-  "macro_protection_restored": "pending user confirmation",
+  "macro_protection_restored": "user confirmed restored on 2026-10-14; no automated setting readback",
   "full_function_checks": "99 passes in previous beta.2; not rerun for label-only change"
 }
