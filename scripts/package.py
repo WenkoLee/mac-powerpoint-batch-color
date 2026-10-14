@@ -4,6 +4,7 @@ from pathlib import Path
 import hashlib
 import json
 import re
+import shutil
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 from audit import audit, public_files
 
@@ -27,6 +28,9 @@ def main():
     stem = 'OneClickColor_MacPowerPoint_' + re.sub(r'[^0-9A-Za-z]', '_', version)
     target = ROOT / 'dist'
     target.mkdir(exist_ok=True)
+    plugin = ROOT / 'release' / ('一键改色_' + re.sub(r'[^0-9A-Za-z]', '_', version) + '.ppam')
+    # GitHub normalizes non-ASCII asset names; use an ASCII download alias.
+    shutil.copyfile(plugin, target / (stem + '.ppam'))
     files = public_files()
     archive(target / (stem + '_Source.zip'), files, 'mac-powerpoint-batch-color')
     user_files = [p for p in files if p.relative_to(ROOT).parts[0] in {'release', 'examples', 'licenses'}
@@ -49,7 +53,7 @@ One-Click Color for Mac PowerPoint · VERSION
 '''.replace('VERSION', version)
     archive(target / (stem + '_Mac.zip'), user_files, stem, {'README.md': intro})
     sums = [hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name for p in sorted(target.glob(stem + '*.zip'))]
-    sums += [hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name for p in sorted((ROOT / 'release').glob('一键改色_' + re.sub(r'[^0-9A-Za-z]', '_', version) + '.ppam'))]
+    sums += [hashlib.sha256(plugin.read_bytes()).hexdigest() + '  ' + stem + '.ppam']
     (target / 'SHA256SUMS.txt').write_text('\n'.join(sums) + '\n')
     for p in sorted(target.glob(stem + '*.zip')):
         print(p.name, p.stat().st_size)
